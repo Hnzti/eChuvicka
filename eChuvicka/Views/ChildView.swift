@@ -51,7 +51,11 @@ struct ChildView: View {
                     }
                 }
                 .padding()
+                #if os(iOS)
                 .background(Color.black.opacity(0.05).ignoresSafeArea(edges: .top))
+                #else
+                .background(Color.black.opacity(0.05))
+                #endif
                 
                 ScrollView {
                     VStack(spacing: 40) {
