@@ -18,13 +18,12 @@ struct eChuvickaApp: App {
 
 struct ContentView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
-    @State private var showingSettings = false
     
     var body: some View {
         Group {
             switch coordinator.role {
             case .none:
-                RoleSelectionView(showingSettings: $showingSettings)
+                RoleSelectionView()
                     .transition(.opacity.combined(with: .scale))
             case .child:
                 ChildView()
@@ -35,12 +34,5 @@ struct ContentView: View {
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: coordinator.role)
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
-                .environmentObject(coordinator.appSettings)
-                #if os(macOS)
-                .frame(width: 400, height: 500)
-                #endif
-        }
     }
 }

@@ -2,44 +2,43 @@ import SwiftUI
 
 struct RoleSelectionView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
-    @Binding var showingSettings: Bool
 
     var body: some View {
-        VStack(spacing: 30) {
-            Spacer()
-            
-            VStack(spacing: 8) {
-                Image(systemName: "moon.stars.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.indigo)
-                Text("eChůvička")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-            }
-            .padding(.bottom, 20)
+        NavigationStack {
+            VStack(spacing: 30) {
+                Spacer()
+                
+                VStack(spacing: 8) {
+                    Image(systemName: "moon.stars.fill")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.indigo)
+                    Text("eChůvička")
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                }
+                .padding(.bottom, 20)
 
-            ViewThatFits {
-                HStack(spacing: 20) {
-                    cards
+                ViewThatFits {
+                    HStack(spacing: 20) {
+                        cards
+                    }
+                    VStack(spacing: 20) {
+                        cards
+                    }
                 }
-                VStack(spacing: 20) {
-                    cards
+                .padding(.horizontal, 30)
+                
+                Spacer()
+                
+                NavigationLink(destination: SettingsView()) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.secondary)
+                        .padding()
+                        .background(Circle().fill(.ultraThinMaterial))
                 }
+                .buttonStyle(.plain)
+                .padding(.bottom, 30)
             }
-            .padding(.horizontal, 30)
-            
-            Spacer()
-            
-            Button(action: {
-                showingSettings = true
-            }) {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(.secondary)
-                    .padding()
-                    .background(Circle().fill(.ultraThinMaterial))
-            }
-            .buttonStyle(.plain)
-            .padding(.bottom, 30)
         }
     }
     
