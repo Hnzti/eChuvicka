@@ -62,7 +62,7 @@ struct ChildView: View {
                                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                     .foregroundColor(.secondary)
                                 
-                                Text(coordinator.generatedPIN.isEmpty ? "------" : coordinator.generatedPIN)
+                                Text(coordinator.generatedPIN.isEmpty ? "----" : coordinator.generatedPIN)
                                     .font(.system(size: 54, weight: .black, design: .monospaced))
                                     .tracking(8)
                                     .padding(.vertical, 20)

@@ -108,11 +108,11 @@ struct ParentView: View {
                                 .frame(maxWidth: 300)
                                 .padding(.vertical, 16)
                                 .background(
-                                    pin.count == 6 ? Color.teal : Color.gray.opacity(0.5)
+                                    pin.count == 4 ? Color.teal : Color.gray.opacity(0.5)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                         }
-                        .disabled(pin.count < 6)
+                        .disabled(pin.count < 4)
                         .buttonStyle(.plain)
                         
                         Spacer()
@@ -319,8 +319,8 @@ struct PINEntryView: View {
                 .opacity(0.01)
                 .onChange(of: pin) { _, newValue in
                     var filtered = newValue.filter { $0.isNumber }
-                    if filtered.count > 6 {
-                        filtered = String(filtered.prefix(6))
+                    if filtered.count > 4 {
+                        filtered = String(filtered.prefix(4))
                     }
                     if filtered != pin {
                         pin = filtered
@@ -329,7 +329,7 @@ struct PINEntryView: View {
             
             // Visual PIN boxes
             HStack(spacing: 12) {
-                ForEach(0..<6, id: \.self) { index in
+                ForEach(0..<4, id: \.self) { index in
                     PINBox(
                         character: pin.count > index ? String(pin[pin.index(pin.startIndex, offsetBy: index)]) : "",
                         isActive: isFocused && pin.count == index

@@ -65,7 +65,7 @@ public class NetworkManager: ObservableObject {
     public func startHosting(isPinRequired: Bool) {
         stop() // Clean up any previous state
         
-        let pin = String(format: "%06d", Int.random(in: 0...999999))
+        let pin = String(format: "%04d", Int.random(in: 0...9999))
         self.generatedPIN = pin
         
         let params = NWParameters.tcp
