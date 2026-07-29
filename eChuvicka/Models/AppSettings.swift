@@ -12,6 +12,7 @@ public class AppSettings: ObservableObject {
     @AppStorage("voxSensitivity") public var voxSensitivity: Double = 0.15
     @AppStorage("isDisconnectAlarmEnabled") public var isDisconnectAlarmEnabled: Bool = true
     @AppStorage("streamingMode") public var streamingMode: StreamingMode = .vox
+    @AppStorage("voxHoldTime") public var voxHoldTime: Double = 15.0
     
     // Nové nastavení (Update 2)
     @AppStorage("isAutoReconnectEnabled") public var isAutoReconnectEnabled: Bool = true

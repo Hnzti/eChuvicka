@@ -13,6 +13,8 @@ public class AudioManager: ObservableObject {
     private var isCaptureActive = false
     private var voxEnabled = true
     private var voxThreshold: Float = 0.15
+    private var voxHoldTime: Double = 15.0
+    private var lastVOXTriggerDate: Date?
     private var onAudioCaptured: ((Data) -> Void)?
     
     // Fixed sample rate for network transmission (both sides must agree)
@@ -36,12 +38,13 @@ public class AudioManager: ObservableObject {
         #endif
     }
     
-    public func startCapture(voxEnabled: Bool, voxThreshold: Float, onAudioCaptured: @escaping (Data) -> Void) {
+    public func startCapture(voxEnabled: Bool, voxThreshold: Float, voxHoldTime: Double, onAudioCaptured: @escaping (Data) -> Void) {
         // Stop any existing capture first
         stopCapture()
         
         self.voxEnabled = voxEnabled
         self.voxThreshold = voxThreshold
+        self.voxHoldTime = voxHoldTime
         self.onAudioCaptured = onAudioCaptured
         self.isCaptureActive = true
         
@@ -90,7 +93,25 @@ public class AudioManager: ObservableObject {
             Task { @MainActor in
                 self.audioLevel = currentLevel
                 
-                let shouldTransmit = !self.voxEnabled || currentLevel > self.voxThreshold
+                // 100% citlivost = práh 0.0 (velmi snadné spuštění)
+                // 0% citlivost = práh 0.5 (nutný velký hluk)
+                let actualThreshold = (1.0 - self.voxThreshold) * 0.5
+                
+                var shouldTransmit = false
+                
+                if !self.voxEnabled {
+                    shouldTransmit = true
+                } else {
+                    if currentLevel > actualThreshold {
+                        self.lastVOXTriggerDate = Date()
+                        shouldTransmit = true
+                    } else if let lastTrigger = self.lastVOXTriggerDate, Date().timeIntervalSince(lastTrigger) < self.voxHoldTime {
+                        shouldTransmit = true
+                    } else {
+                        shouldTransmit = false
+                    }
+                }
+                
                 self.isTransmitting = shouldTransmit
                 
                 if shouldTransmit && !dataToSend.isEmpty {

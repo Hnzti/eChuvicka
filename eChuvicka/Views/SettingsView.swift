@@ -17,6 +17,13 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                         Slider(value: $settings.voxSensitivity, in: 0...1)
+                        
+                        Picker("Doba vysílání po detekci", selection: $settings.voxHoldTime) {
+                            Text("5 sekund").tag(5.0)
+                            Text("15 sekund").tag(15.0)
+                            Text("30 sekund").tag(30.0)
+                            Text("1 minuta").tag(60.0)
+                        }
                     }
                 }
                 

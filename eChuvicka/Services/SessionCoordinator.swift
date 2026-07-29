@@ -120,7 +120,8 @@ public class SessionCoordinator: ObservableObject {
         networkManager.startHosting()
         audioManager.startCapture(
             voxEnabled: appSettings.isVOXEnabled,
-            voxThreshold: Float(appSettings.voxSensitivity)
+            voxThreshold: Float(appSettings.voxSensitivity),
+            voxHoldTime: appSettings.voxHoldTime
         ) { [weak self] data in
             self?.networkManager.sendAudioData(data)
             self?.heartbeatMonitor.dataReceived()
@@ -143,7 +144,7 @@ public class SessionCoordinator: ObservableObject {
     
     public func startPTT() {
         guard role == .parent else { return }
-        audioManager.startCapture(voxEnabled: false, voxThreshold: 0.0) { [weak self] data in
+        audioManager.startCapture(voxEnabled: false, voxThreshold: 0.0, voxHoldTime: 0.0) { [weak self] data in
             self?.networkManager.sendAudioData(data)
         }
     }
