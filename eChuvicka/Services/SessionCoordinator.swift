@@ -1,5 +1,8 @@
 import Foundation
 import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 
 @MainActor
 public class SessionCoordinator: ObservableObject {
