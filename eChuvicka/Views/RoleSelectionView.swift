@@ -27,15 +27,13 @@ struct RoleSelectionView: View {
                 }
                 .padding(.horizontal, 30)
                 
+                Spacer()
             }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink(destination: SettingsView()) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(.secondary)
+                        Label("Nastavení", systemImage: "gearshape")
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }
