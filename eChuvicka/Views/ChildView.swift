@@ -148,6 +148,9 @@ struct ChildView: View {
                     }
             }
         } // Ends ZStack
+        #if os(iOS)
+        .statusBarHidden(isNightModeActive)
+        #endif
         .onChange(of: coordinator.isConnected) { _, isConnected in
             if isConnected && coordinator.appSettings.isAutoNightModeEnabled {
                 Task {
