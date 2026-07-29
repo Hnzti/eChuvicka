@@ -60,13 +60,15 @@ struct SettingsView: View {
             }
             
             Section {
+                Toggle("Vyžadovat párovací PIN", isOn: $settings.isPinRequired)
+                
                 Toggle("Automatický noční režim (zčernání displeje)", isOn: $settings.isAutoNightModeEnabled)
                 
-                Text("Pokud je funkce aktivní, 10 sekund po úspěšném připojení se obrazovka dětské jednotky zcela zhasne (zčerná), aby světlo nerušilo spánek. Probudíte ji klepnutím.")
+                Text("Pokud zrušíte vyžadování PINu, k chůvičce se bude moci na stejné síti připojit kdokoliv. Pokud je funkce aktivní, 10 sekund po úspěšném připojení se obrazovka dětské jednotky zcela zhasne.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("Displej (Dítě)")
+                Text("Displej a zabezpečení (Dítě)")
             }
             
             Section {

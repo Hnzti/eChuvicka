@@ -10,8 +10,9 @@ public enum ConnectionMode: String, Sendable {
 
 /// Represents a discovered child device
 public struct DiscoveredDevice: Identifiable, Hashable {
-    public let id: String  // PIN
+    public let id: String  // PIN or UUID
     public let name: String
+    public let requiresPin: Bool
     public let endpoint: NWEndpoint
     
     public func hash(into hasher: inout Hasher) {
@@ -28,12 +29,14 @@ public struct SettingsPacket: Codable, Sendable {
     public let voxSensitivity: Double
     public let voxHoldTime: Double
     public let isAutoNightModeEnabled: Bool
+    public let isPinRequired: Bool
     
-    public init(isVOXEnabled: Bool, voxSensitivity: Double, voxHoldTime: Double, isAutoNightModeEnabled: Bool) {
+    public init(isVOXEnabled: Bool, voxSensitivity: Double, voxHoldTime: Double, isAutoNightModeEnabled: Bool, isPinRequired: Bool) {
         self.isVOXEnabled = isVOXEnabled
         self.voxSensitivity = voxSensitivity
         self.voxHoldTime = voxHoldTime
         self.isAutoNightModeEnabled = isAutoNightModeEnabled
+        self.isPinRequired = isPinRequired
     }
 }
 
@@ -59,7 +62,7 @@ public class NetworkManager: ObservableObject {
     
     // MARK: - Child / Transmitter
     
-    public func startHosting() {
+    public func startHosting(isPinRequired: Bool) {
         stop() // Clean up any previous state
         
         let pin = String(format: "%06d", Int.random(in: 0...999999))
@@ -70,7 +73,8 @@ public class NetworkManager: ObservableObject {
         
         do {
             let nwListener = try NWListener(using: params)
-            nwListener.service = NWListener.Service(name: "eChuvicka-\(pin)", type: serviceType)
+            let namePrefix = isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-"
+            nwListener.service = NWListener.Service(name: "\(namePrefix)\(pin)", type: serviceType)
             
             nwListener.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor in
@@ -141,11 +145,12 @@ public class NetworkManager: ObservableObject {
                 var devices: [DiscoveredDevice] = []
                 for result in results {
                     if case let .service(name, _, _, _) = result.endpoint {
-                        // Service name format: "eChuvicka-XXXXXX"
-                        let pin = name.replacingOccurrences(of: "eChuvicka-", with: "")
+                        let requiresPin = name.contains("-PIN-")
+                        let id = name.components(separatedBy: "-").last ?? ""
                         devices.append(DiscoveredDevice(
-                            id: pin,
+                            id: id,
                             name: name,
+                            requiresPin: requiresPin,
                             endpoint: result.endpoint
                         ))
                     }

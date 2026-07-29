@@ -145,23 +145,27 @@ struct ParentView: View {
                                 VStack(spacing: 12) {
                                     ForEach(coordinator.discoveredDevices, id: \.id) { device in
                                         Button(action: {
-                                            selectedDevice = device
-                                            pin = ""
-                                            showPinError = false
+                                            if device.requiresPin {
+                                                selectedDevice = device
+                                                pin = ""
+                                                showPinError = false
+                                            } else {
+                                                coordinator.connectToDevice(device)
+                                            }
                                         }) {
                                             HStack {
                                                 VStack(alignment: .leading, spacing: 4) {
                                                     Text("Dětská jednotka")
                                                         .font(.system(.headline, design: .rounded, weight: .bold))
-                                                    Text("Klepněte pro zadání PINu")
+                                                    Text(device.requiresPin ? "Klepněte pro zadání PINu" : "Klepněte pro přímé připojení")
                                                         .font(.system(.subheadline, design: .rounded))
                                                         .foregroundColor(.secondary)
                                                 }
                                                 
                                                 Spacer()
                                                 
-                                                Image(systemName: "lock.fill")
-                                                    .foregroundColor(.teal)
+                                                Image(systemName: device.requiresPin ? "lock.fill" : "lock.open.fill")
+                                                    .foregroundColor(device.requiresPin ? .teal : .green)
                                             }
                                             .padding()
                                             .background(Color.secondary.opacity(0.1))

@@ -57,23 +57,30 @@ struct ChildView: View {
                     VStack(spacing: 40) {
                         // PIN Display
                         VStack(spacing: 12) {
-                            Text("Párovací PIN kód")
-                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                                .foregroundColor(.secondary)
-                            
-                            Text(coordinator.generatedPIN.isEmpty ? "------" : coordinator.generatedPIN)
-                                .font(.system(size: 54, weight: .black, design: .monospaced))
-                                .tracking(8)
-                                .padding(.vertical, 20)
-                                .padding(.horizontal, 30)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                        .fill(Color.blue.opacity(0.1))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                        .stroke(Color.blue.opacity(0.3), lineWidth: 2)
-                                )
+                            if coordinator.appSettings.isPinRequired {
+                                Text("Párovací PIN kód")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                                
+                                Text(coordinator.generatedPIN.isEmpty ? "------" : coordinator.generatedPIN)
+                                    .font(.system(size: 54, weight: .black, design: .monospaced))
+                                    .tracking(8)
+                                    .padding(.vertical, 20)
+                                    .padding(.horizontal, 30)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                            .fill(Color.blue.opacity(0.1))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                            .stroke(Color.blue.opacity(0.3), lineWidth: 2)
+                                    )
+                            } else {
+                                Text("Otevřené spojení (bez PINu)")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                                    .padding(.vertical, 20)
+                            }
                         }
                         .padding(.top, 40)
                         

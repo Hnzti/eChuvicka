@@ -78,7 +78,7 @@ public class SessionCoordinator: ObservableObject {
             Task { @MainActor in
                 guard let self = self, self.role == .parent, self.appSettings.isAutoReconnectEnabled else { return }
                 let lastPIN = self.appSettings.lastConnectedPIN
-                if !lastPIN.isEmpty, !self.isConnected, let target = devices.first(where: { $0.name == lastPIN }) {
+                if !lastPIN.isEmpty, !self.isConnected, let target = devices.first(where: { $0.id == lastPIN }) {
                     print("Auto-reconnecting to \(lastPIN)")
                     self.connectToDevice(target)
                 }
@@ -114,6 +114,7 @@ public class SessionCoordinator: ObservableObject {
                 self.appSettings.voxSensitivity = packet.voxSensitivity
                 self.appSettings.voxHoldTime = packet.voxHoldTime
                 self.appSettings.isAutoNightModeEnabled = packet.isAutoNightModeEnabled
+                self.appSettings.isPinRequired = packet.isPinRequired
                 
                 // Okamžitě restartovat záznam s novými hodnotami
                 self.audioManager.startCapture(
@@ -161,14 +162,15 @@ public class SessionCoordinator: ObservableObject {
             isVOXEnabled: appSettings.isVOXEnabled,
             voxSensitivity: appSettings.voxSensitivity,
             voxHoldTime: appSettings.voxHoldTime,
-            isAutoNightModeEnabled: appSettings.isAutoNightModeEnabled
+            isAutoNightModeEnabled: appSettings.isAutoNightModeEnabled,
+            isPinRequired: appSettings.isPinRequired
         )
         networkManager.sendSettings(packet)
     }
     
     public func startAsChild() {
         role = .child
-        networkManager.startHosting()
+        networkManager.startHosting(isPinRequired: appSettings.isPinRequired)
         audioManager.startCapture(
             voxEnabled: appSettings.isVOXEnabled,
             voxThreshold: Float(appSettings.voxSensitivity),
@@ -186,7 +188,7 @@ public class SessionCoordinator: ObservableObject {
     }
     
     public func connectToDevice(_ device: DiscoveredDevice) {
-        appSettings.lastConnectedPIN = device.name
+        appSettings.lastConnectedPIN = device.id
         audioManager.isAudioBoostEnabled = appSettings.isAudioBoostEnabled
         networkManager.connectToDevice(device)
         audioManager.preparePlayback()

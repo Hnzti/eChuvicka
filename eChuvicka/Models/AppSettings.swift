@@ -18,6 +18,7 @@ public class AppSettings: ObservableObject {
     @AppStorage("isAutoReconnectEnabled") public var isAutoReconnectEnabled: Bool = true
     @AppStorage("isLowBatteryAlertEnabled") public var isLowBatteryAlertEnabled: Bool = true
     @AppStorage("isAutoNightModeEnabled") public var isAutoNightModeEnabled: Bool = true
+    @AppStorage("isPinRequired") public var isPinRequired: Bool = true
     @AppStorage("disconnectAlarmDelay") public var disconnectAlarmDelay: Double = 6.0
     @AppStorage("isAudioBoostEnabled") public var isAudioBoostEnabled: Bool = false
     @AppStorage("lastConnectedPIN") public var lastConnectedPIN: String = ""
