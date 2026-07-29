@@ -1,0 +1,118 @@
+import SwiftUI
+
+struct ChildView: View {
+    @EnvironmentObject var coordinator: SessionCoordinator
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button(action: {
+                    coordinator.stop()
+                    coordinator.role = .none
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Zpět")
+                    }
+                    .font(.system(.body, design: .rounded, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.indigo)
+                
+                Spacer()
+                
+                Text("Dětská jednotka")
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                
+                Spacer()
+                
+                // Placeholder to balance the back button
+                Text("Zpět")
+                    .opacity(0)
+            }
+            .padding()
+            .background(Color.black.opacity(0.05).ignoresSafeArea(edges: .top))
+            
+            ScrollView {
+                VStack(spacing: 40) {
+                    // PIN Display
+                    VStack(spacing: 12) {
+                        Text("Párovací PIN kód")
+                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        
+                        Text(coordinator.generatedPIN.isEmpty ? "------" : coordinator.generatedPIN)
+                            .font(.system(size: 54, weight: .black, design: .monospaced))
+                            .tracking(8)
+                            .padding(.vertical, 20)
+                            .padding(.horizontal, 30)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .fill(Color.blue.opacity(0.1))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(Color.blue.opacity(0.3), lineWidth: 2)
+                            )
+                    }
+                    .padding(.top, 40)
+                    
+                    // Status Badge
+                    ConnectionStatusBadge(
+                        mode: coordinator.connectionMode,
+                        latencyMs: coordinator.latencyMs
+                    )
+                    
+                    // Audio Visualizer
+                    ZStack {
+                        AudioLevelView(audioLevel: coordinator.audioLevel, isTransmitting: coordinator.isConnected && coordinator.audioLevel > 0.05)
+                            .frame(height: 200)
+                        
+                        if coordinator.audioLevel <= 0.05 && coordinator.isConnected {
+                            Image(systemName: "powersleep")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary.opacity(0.5))
+                        }
+                    }
+                    
+                    // Status Text
+                    VStack(spacing: 8) {
+                        if coordinator.isConnected {
+                            if coordinator.audioLevel > 0.05 {
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(Color.red)
+                                        .frame(width: 10, height: 10)
+                                    Text("VYSÍLÁ ZVUK")
+                                        .font(.system(.headline, design: .rounded, weight: .bold))
+                                        .foregroundColor(.red)
+                                }
+                            } else {
+                                Text("Ticho – úspora baterie")
+                                    .font(.system(.body, design: .rounded))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            // Parent speaking indicator
+                            // Assuming there's a property for this, if not, we use a mock condition
+                            if coordinator.isConnectionAlive && false /* replace with isParentSpeaking */ {
+                                Text("Rodič mluví...")
+                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                    .foregroundColor(.blue)
+                                    .padding(.top, 4)
+                            }
+                        } else {
+                            Text("Čekání na spojení...")
+                                .font(.system(.body, design: .rounded))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 40)
+            }
+        }
+    }
+}
