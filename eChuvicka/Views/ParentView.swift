@@ -175,23 +175,21 @@ struct ParentView: View {
 
 struct PINEntryView: View {
     @Binding var pin: String
+    @FocusState private var isFocused: Bool
     
     var body: some View {
-        HStack(spacing: 12) {
-            ForEach(0..<6, id: \.self) { index in
-                PINBox(
-                    character: pin.count > index ? String(pin[pin.index(pin.startIndex, offsetBy: index)]) : "",
-                    isActive: pin.count == index
-                )
-            }
-        }
-        .overlay(
+        ZStack {
+            // Hidden but focusable TextField that captures all input
             TextField("", text: $pin)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .opacity(0.01) // Nearly invisible but still tappable
+                .focused($isFocused)
                 #if os(iOS)
                 .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
                 #endif
+                .foregroundColor(.clear)
+                .accentColor(.clear)
+                .frame(width: 1, height: 1)
+                .opacity(0.01)
                 .onChange(of: pin) { _, newValue in
                     var filtered = newValue.filter { $0.isNumber }
                     if filtered.count > 6 {
@@ -201,8 +199,28 @@ struct PINEntryView: View {
                         pin = filtered
                     }
                 }
-        )
+            
+            // Visual PIN boxes
+            HStack(spacing: 12) {
+                ForEach(0..<6, id: \.self) { index in
+                    PINBox(
+                        character: pin.count > index ? String(pin[pin.index(pin.startIndex, offsetBy: index)]) : "",
+                        isActive: isFocused && pin.count == index
+                    )
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isFocused = true
+            }
+        }
         .frame(height: 70)
+        .onAppear {
+            // Auto-focus on appear
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                isFocused = true
+            }
+        }
     }
 }
 
@@ -215,15 +233,23 @@ struct PINBox: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color.secondary.opacity(0.1))
             
-            if isActive {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.teal, lineWidth: 2)
-            }
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(isActive ? Color.teal : (character.isEmpty ? Color.clear : Color.teal.opacity(0.5)), lineWidth: 2)
             
-            Text(character)
-                .font(.system(size: 32, weight: .bold, design: .monospaced))
+            if !character.isEmpty {
+                Text(character)
+                    .font(.system(size: 32, weight: .bold, design: .monospaced))
+                    .transition(.scale.combined(with: .opacity))
+            } else if isActive {
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(Color.teal)
+                    .frame(width: 2, height: 24)
+                    .opacity(isActive ? 1 : 0)
+            }
         }
         .frame(width: 50, height: 60)
-        .animation(.easeInOut(duration: 0.2), value: isActive)
+        .animation(.easeInOut(duration: 0.15), value: character)
+        .animation(.easeInOut(duration: 0.3), value: isActive)
     }
 }
+

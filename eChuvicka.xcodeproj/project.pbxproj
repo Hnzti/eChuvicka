@@ -54,7 +54,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C100000000000000000001 /* Project Root */ = {
+		C100000000000000000001 = {
 			isa = PBXGroup;
 			children = (
 				C100000000000000000002 /* eChuvicka */,
@@ -169,7 +169,7 @@
 				cs,
 				Base,
 			);
-			mainGroup = C100000000000000000001 /* Project Root */;
+			mainGroup = C100000000000000000001;
 			productRefGroup = C100000000000000000007 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -336,6 +336,7 @@
 				CODE_SIGN_ENTITLEMENTS = eChuvicka/eChuvicka.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7M39C5AJ3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = eChuvicka/Info.plist;
@@ -368,6 +369,7 @@
 				CODE_SIGN_ENTITLEMENTS = eChuvicka/eChuvicka.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7M39C5AJ3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = eChuvicka/Info.plist;
