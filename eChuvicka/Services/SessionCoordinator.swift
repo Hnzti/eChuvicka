@@ -140,10 +140,8 @@ public class SessionCoordinator: ObservableObject {
         heartbeatMonitor.onSendHeartbeat = { [weak self] in
             Task { @MainActor in
                 guard let self = self else { return }
-                if !self.audioManager.isTransmitting {
-                    let packet = HeartbeatPacket(timestamp: Date(), batteryLevel: HeartbeatMonitor.currentBatteryLevel())
-                    self.networkManager.sendHeartbeat(packet)
-                }
+                let packet = HeartbeatPacket(timestamp: Date(), batteryLevel: HeartbeatMonitor.currentBatteryLevel())
+                self.networkManager.sendHeartbeat(packet)
             }
         }
         
