@@ -90,32 +90,20 @@ struct ChildView: View {
                         
                         // Audio Visualizer
                         ZStack {
-                            AudioLevelView(audioLevel: coordinator.audioLevel, isTransmitting: coordinator.isConnected && coordinator.audioLevel > 0.05)
+                            AudioLevelView(audioLevel: coordinator.audioLevel, isTransmitting: coordinator.isConnected)
                                 .frame(height: 200)
-                            
-                            if coordinator.audioLevel <= 0.05 && coordinator.isConnected {
-                                Image(systemName: "powersleep")
-                                    .font(.system(size: 40))
-                                    .foregroundColor(.secondary.opacity(0.5))
-                            }
                         }
                         
                         // Status Text
                         VStack(spacing: 8) {
                             if coordinator.isConnected {
-                                if coordinator.audioLevel > 0.05 {
-                                    HStack(spacing: 8) {
-                                        Circle()
-                                            .fill(Color.red)
-                                            .frame(width: 10, height: 10)
-                                        Text("VYSÍLÁ ZVUK")
-                                            .font(.system(.headline, design: .rounded, weight: .bold))
-                                            .foregroundColor(.red)
-                                    }
-                                } else {
-                                    Text("Ticho – úspora baterie")
-                                        .font(.system(.body, design: .rounded))
-                                        .foregroundColor(.secondary)
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(Color.green)
+                                        .frame(width: 10, height: 10)
+                                    Text("SNÍMÁNÍ ZVUKU AKTIVNÍ")
+                                        .font(.system(.headline, design: .rounded, weight: .bold))
+                                        .foregroundColor(.green)
                                 }
                                 
                                 // Parent speaking indicator
