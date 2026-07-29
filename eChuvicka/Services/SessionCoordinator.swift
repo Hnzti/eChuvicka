@@ -103,6 +103,32 @@ public class SessionCoordinator: ObservableObject {
             }
         }
         
+        networkManager.onSettingsReceived = { [weak self] packet in
+            Task { @MainActor in
+                guard let self = self, self.role == .child else { return }
+                
+                print("[Child] Přijato nové nastavení od rodiče: VOX \(packet.isVOXEnabled), Citlivost \(packet.voxSensitivity)")
+                
+                // Uložit lokálně
+                self.appSettings.isVOXEnabled = packet.isVOXEnabled
+                self.appSettings.voxSensitivity = packet.voxSensitivity
+                self.appSettings.voxHoldTime = packet.voxHoldTime
+                self.appSettings.isAutoNightModeEnabled = packet.isAutoNightModeEnabled
+                
+                // Okamžitě restartovat záznam s novými hodnotami
+                self.audioManager.startCapture(
+                    voxEnabled: packet.isVOXEnabled,
+                    voxThreshold: Float(packet.voxSensitivity),
+                    voxHoldTime: packet.voxHoldTime
+                ) { [weak self] data in
+                    self?.networkManager.sendAudioData(data)
+                    self?.heartbeatMonitor.dataReceived()
+                }
+                
+                // Dětská UI obrazovka zareaguje na isAutoNightModeEnabled sama přes @AppStorage/EnvironmentObject
+            }
+        }
+        
         // Setup Heartbeat callbacks
         heartbeatMonitor.onSendHeartbeat = { [weak self] in
             Task { @MainActor in
@@ -113,6 +139,31 @@ public class SessionCoordinator: ObservableObject {
                 }
             }
         }
+        
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification).sink { [weak self] _ in
+            Task { @MainActor in
+                self?.sendCurrentSettingsToChild()
+            }
+        }.store(in: &cancellables)
+        
+        networkManager.$isConnected.sink { [weak self] connected in
+            Task { @MainActor in
+                if connected {
+                    self?.sendCurrentSettingsToChild()
+                }
+            }
+        }.store(in: &cancellables)
+    }
+    
+    public func sendCurrentSettingsToChild() {
+        guard role == .parent, isConnected else { return }
+        let packet = SettingsPacket(
+            isVOXEnabled: appSettings.isVOXEnabled,
+            voxSensitivity: appSettings.voxSensitivity,
+            voxHoldTime: appSettings.voxHoldTime,
+            isAutoNightModeEnabled: appSettings.isAutoNightModeEnabled
+        )
+        networkManager.sendSettings(packet)
     }
     
     public func startAsChild() {

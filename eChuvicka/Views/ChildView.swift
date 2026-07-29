@@ -4,6 +4,7 @@ struct ChildView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
     @Environment(\.colorScheme) var colorScheme
     @State private var isNightModeActive = false
+    @State private var showingSettings = false
 
     var body: some View {
         ZStack {
@@ -30,9 +31,24 @@ struct ChildView: View {
                     
                     Spacer()
                     
-                    // Placeholder to balance the back button
-                    Text("Zpět")
-                        .opacity(0)
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(.body, weight: .bold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.indigo)
+                    .sheet(isPresented: $showingSettings) {
+                        NavigationStack {
+                            SettingsView()
+                                .toolbar {
+                                    ToolbarItem(placement: .cancellationAction) {
+                                        Button("Zavřít") { showingSettings = false }
+                                    }
+                                }
+                        }
+                    }
                 }
                 .padding()
                 .background(Color.black.opacity(0.05).ignoresSafeArea(edges: .top))

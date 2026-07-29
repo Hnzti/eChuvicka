@@ -23,6 +23,20 @@ public struct DiscoveredDevice: Identifiable, Hashable {
     }
 }
 
+public struct SettingsPacket: Codable, Sendable {
+    public let isVOXEnabled: Bool
+    public let voxSensitivity: Double
+    public let voxHoldTime: Double
+    public let isAutoNightModeEnabled: Bool
+    
+    public init(isVOXEnabled: Bool, voxSensitivity: Double, voxHoldTime: Double, isAutoNightModeEnabled: Bool) {
+        self.isVOXEnabled = isVOXEnabled
+        self.voxSensitivity = voxSensitivity
+        self.voxHoldTime = voxHoldTime
+        self.isAutoNightModeEnabled = isAutoNightModeEnabled
+    }
+}
+
 @MainActor
 public class NetworkManager: ObservableObject {
     @Published public var connectionMode: ConnectionMode = .disconnected
@@ -33,6 +47,7 @@ public class NetworkManager: ObservableObject {
     
     public var onAudioDataReceived: (@Sendable (Data) -> Void)?
     public var onHeartbeatReceived: (@Sendable (HeartbeatPacket) -> Void)?
+    public var onSettingsReceived: (@Sendable (SettingsPacket) -> Void)?
     
     private var listener: NWListener?
     private var browser: NWBrowser?
@@ -243,6 +258,11 @@ public class NetworkManager: ObservableObject {
         sendFramedMessage(type: 0x02, payload: data)
     }
     
+    public func sendSettings(_ packet: SettingsPacket) {
+        guard let data = try? JSONEncoder().encode(packet) else { return }
+        sendFramedMessage(type: 0x03, payload: data)
+    }
+    
     private func sendFramedMessage(type: UInt8, payload: Data) {
         guard let connection = connection, isConnected else { return }
         
@@ -297,6 +317,10 @@ public class NetworkManager: ObservableObject {
                             if let packet = try? JSONDecoder().decode(HeartbeatPacket.self, from: payloadData) {
                                 self?.onHeartbeatReceived?(packet)
                                 self?.peerBatteryLevel = packet.batteryLevel
+                            }
+                        } else if type == 0x03 {
+                            if let packet = try? JSONDecoder().decode(SettingsPacket.self, from: payloadData) {
+                                self?.onSettingsReceived?(packet)
                             }
                         }
                     }

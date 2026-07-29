@@ -11,6 +11,7 @@ struct ParentView: View {
     @State private var selectedDevice: DiscoveredDevice? = nil
     @State private var pin: String = ""
     @State private var showPinError = false
+    @State private var showingSettings = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -35,7 +36,24 @@ struct ParentView: View {
                 
                 Spacer()
                 
-                Text("Zpět").opacity(0)
+                Button(action: {
+                    showingSettings = true
+                }) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(.body, weight: .bold))
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.teal)
+                .sheet(isPresented: $showingSettings) {
+                    NavigationStack {
+                        SettingsView()
+                            .toolbar {
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button("Zavřít") { showingSettings = false }
+                                }
+                            }
+                    }
+                }
             }
             .padding()
             .background(Color.black.opacity(0.05).ignoresSafeArea(edges: .top))
