@@ -8,12 +8,28 @@ public enum ConnectionMode: String, Sendable {
     case connectedDirect = "Přímé spojení (P2P)"
 }
 
+/// Represents a discovered child device
+public struct DiscoveredDevice: Identifiable, Hashable {
+    public let id: String  // PIN
+    public let name: String
+    public let endpoint: NWEndpoint
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    public static func == (lhs: DiscoveredDevice, rhs: DiscoveredDevice) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 @MainActor
 public class NetworkManager: ObservableObject {
     @Published public var connectionMode: ConnectionMode = .disconnected
     @Published public var isConnected: Bool = false
     @Published public var generatedPIN: String = ""
     @Published public var peerBatteryLevel: Float = 1.0
+    @Published public var discoveredDevices: [DiscoveredDevice] = []
     
     public var onAudioDataReceived: (@Sendable (Data) -> Void)?
     public var onHeartbeatReceived: (@Sendable (HeartbeatPacket) -> Void)?
@@ -27,25 +43,32 @@ public class NetworkManager: ObservableObject {
     public init() {}
     
     // MARK: - Child / Transmitter
+    
     public func startHosting() {
+        stop() // Clean up any previous state
+        
         let pin = String(format: "%06d", Int.random(in: 0...999999))
         self.generatedPIN = pin
         
-        let tcpOptions = NWProtocolTCP.Options()
-        let params = NWParameters(tls: nil, tcp: tcpOptions)
+        let params = NWParameters.tcp
         params.includePeerToPeer = true
         
         do {
             let nwListener = try NWListener(using: params)
-            nwListener.service = NWListener.Service(name: pin, type: serviceType)
+            nwListener.service = NWListener.Service(name: "eChuvicka-\(pin)", type: serviceType)
             
             nwListener.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor in
+                    guard let self = self else { return }
                     switch state {
                     case .ready:
-                        self?.connectionMode = .searching
-                    case .failed, .cancelled:
-                        self?.stop()
+                        self.connectionMode = .searching
+                        print("[Child] Listener ready, waiting for parent...")
+                    case .failed(let error):
+                        print("[Child] Listener failed: \(error)")
+                        self.connectionMode = .disconnected
+                    case .cancelled:
+                        break
                     default:
                         break
                     }
@@ -54,6 +77,7 @@ public class NetworkManager: ObservableObject {
             
             nwListener.newConnectionHandler = { [weak self] newConnection in
                 Task { @MainActor in
+                    print("[Child] Parent connected!")
                     self?.setupConnection(newConnection)
                 }
             }
@@ -63,24 +87,33 @@ public class NetworkManager: ObservableObject {
             self.connectionMode = .searching
             
         } catch {
-            print("Failed to start listener: \(error)")
+            print("[Child] Failed to start listener: \(error)")
         }
     }
     
     // MARK: - Parent / Receiver
-    public func startBrowsing(pin: String) {
-        let params = NWParameters()
+    
+    /// Start browsing for child devices — populates discoveredDevices list
+    public func startBrowsing() {
+        stop() // Clean up any previous state
+        
+        let params = NWParameters.tcp
         params.includePeerToPeer = true
         
-        let nwBrowser = NWBrowser(for: .bonjour(type: serviceType, domain: "local."), using: params)
+        let nwBrowser = NWBrowser(for: .bonjour(type: serviceType, domain: nil), using: params)
         
         nwBrowser.stateUpdateHandler = { [weak self] state in
             Task { @MainActor in
+                guard let self = self else { return }
                 switch state {
                 case .ready:
-                    self?.connectionMode = .searching
-                case .failed, .cancelled:
-                    self?.stop()
+                    self.connectionMode = .searching
+                    print("[Parent] Browser ready, searching for children...")
+                case .failed(let error):
+                    print("[Parent] Browser failed: \(error)")
+                    self.connectionMode = .disconnected
+                case .cancelled:
+                    break
                 default:
                     break
                 }
@@ -90,13 +123,20 @@ public class NetworkManager: ObservableObject {
         nwBrowser.browseResultsChangedHandler = { [weak self] results, changes in
             Task { @MainActor in
                 guard let self = self else { return }
+                var devices: [DiscoveredDevice] = []
                 for result in results {
-                    if case let .service(name, _, _, _) = result.endpoint, name == pin {
-                        self.connectTo(endpoint: result.endpoint)
-                        self.browser?.cancel()
-                        break
+                    if case let .service(name, _, _, _) = result.endpoint {
+                        // Service name format: "eChuvicka-XXXXXX"
+                        let pin = name.replacingOccurrences(of: "eChuvicka-", with: "")
+                        devices.append(DiscoveredDevice(
+                            id: pin,
+                            name: name,
+                            endpoint: result.endpoint
+                        ))
                     }
                 }
+                self.discoveredDevices = devices
+                print("[Parent] Found \(devices.count) device(s)")
             }
         }
         
@@ -105,31 +145,49 @@ public class NetworkManager: ObservableObject {
         self.connectionMode = .searching
     }
     
-    private func connectTo(endpoint: NWEndpoint) {
-        let tcpOptions = NWProtocolTCP.Options()
-        let params = NWParameters(tls: nil, tcp: tcpOptions)
+    /// Connect to a specific discovered device
+    public func connectToDevice(_ device: DiscoveredDevice) {
+        print("[Parent] Connecting to device: \(device.name)")
+        
+        let params = NWParameters.tcp
         params.includePeerToPeer = true
         
-        let newConnection = NWConnection(to: endpoint, using: params)
+        let newConnection = NWConnection(to: device.endpoint, using: params)
+        
+        // Stop browsing once we're connecting
+        browser?.cancel()
+        browser = nil
+        
         setupConnection(newConnection)
     }
     
+    // MARK: - Connection Setup
+    
     private func setupConnection(_ newConnection: NWConnection) {
-        connection?.cancel()
+        // Cancel old connection if any
+        if let old = connection {
+            old.stateUpdateHandler = nil
+            old.cancel()
+        }
         connection = newConnection
         
         newConnection.stateUpdateHandler = { [weak self] state in
             Task { @MainActor in
                 guard let self = self else { return }
                 switch state {
+                case .preparing:
+                    print("[Connection] Preparing...")
                 case .ready:
+                    print("[Connection] Ready!")
                     self.isConnected = true
-                    self.updateConnectionMode(path: newConnection.currentPath)
+                    self.connectionMode = .connectedRouter
                     self.startReceiving()
-                case .failed, .cancelled:
-                    self.isConnected = false
-                    self.connectionMode = .disconnected
-                    self.connection = nil
+                case .failed(let error):
+                    print("[Connection] Failed: \(error)")
+                    self.handleDisconnect()
+                case .cancelled:
+                    print("[Connection] Cancelled")
+                    self.handleDisconnect()
                 default:
                     break
                 }
@@ -138,45 +196,40 @@ public class NetworkManager: ObservableObject {
         
         newConnection.pathUpdateHandler = { [weak self] newPath in
             Task { @MainActor in
-                self?.updateConnectionMode(path: newPath)
+                guard let self = self, self.isConnected else { return }
+                if newPath.usesInterfaceType(.wifi) {
+                    self.connectionMode = .connectedRouter
+                } else {
+                    self.connectionMode = .connectedDirect
+                }
             }
         }
         
         newConnection.start(queue: .main)
     }
     
-    private func updateConnectionMode(path: NWPath?) {
-        guard let path = path else { return }
-        // Determine if the path uses a direct peer-to-peer interface
-        // If the path satisfies Wi-Fi but there are no gateways, it's likely P2P
-        if path.usesInterfaceType(.wifi) {
-            // Check if this is a direct/peer-to-peer connection
-            // NWPath doesn't have isLocal, so we use availableInterfaces to check
-            let hasInfrastructure = path.availableInterfaces.contains { $0.type == .wifi }
-            if path.availableInterfaces.count == 1 && hasInfrastructure {
-                // Simple heuristic: if connected via Wi-Fi and P2P was enabled,
-                // we consider it router by default; if the endpoint was discovered
-                // via P2P browsing, the framework will prefer that path
-                connectionMode = .connectedRouter
-            } else {
-                connectionMode = .connectedRouter
-            }
-        } else {
-            // Non-Wi-Fi path, likely peer-to-peer direct
-            connectionMode = .connectedDirect
-        }
+    private func handleDisconnect() {
+        isConnected = false
+        connectionMode = .disconnected
+        connection = nil
     }
     
     public func stop() {
         listener?.cancel()
         listener = nil
+        
         browser?.cancel()
         browser = nil
-        connection?.cancel()
+        
+        if let conn = connection {
+            conn.stateUpdateHandler = nil
+            conn.cancel()
+        }
         connection = nil
         
         isConnected = false
         connectionMode = .disconnected
+        discoveredDevices = []
     }
     
     // MARK: - Data Transfer
@@ -201,7 +254,7 @@ public class NetworkManager: ObservableObject {
         
         connection.send(content: message, completion: .contentProcessed({ error in
             if let error = error {
-                print("Failed to send data: \(error)")
+                print("[Send] Error: \(error)")
             }
         }))
     }
@@ -211,16 +264,16 @@ public class NetworkManager: ObservableObject {
     private func startReceiving() {
         guard let connection = connection else { return }
         
-        // Read header: 1 byte type + 4 bytes length = 5 bytes
         connection.receive(minimumIncompleteLength: 5, maximumLength: 5) { [weak self] headerData, _, isComplete, error in
             if let error = error {
-                print("Receive header error: \(error)")
+                print("[Receive] Header error: \(error)")
+                Task { @MainActor in self?.handleDisconnect() }
                 return
             }
             
             guard let headerData = headerData, headerData.count == 5 else {
-                if !isComplete {
-                    Task { @MainActor in self?.startReceiving() }
+                if isComplete {
+                    Task { @MainActor in self?.handleDisconnect() }
                 }
                 return
             }
@@ -229,30 +282,27 @@ public class NetworkManager: ObservableObject {
             let lengthData = headerData.subdata(in: 1..<5)
             let length = UInt32(bigEndian: lengthData.withUnsafeBytes { $0.load(as: UInt32.self) })
             
-            // Read payload
-            connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { [weak self] payloadData, _, isComplete2, error2 in
+            connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { [weak self] payloadData, _, _, error2 in
                 if let error2 = error2 {
-                    print("Receive payload error: \(error2)")
+                    print("[Receive] Payload error: \(error2)")
+                    Task { @MainActor in self?.handleDisconnect() }
                     return
                 }
                 
                 Task { @MainActor [weak self] in
                     if let payloadData = payloadData {
-                        if type == 0x01 { // Audio
+                        if type == 0x01 {
                             self?.onAudioDataReceived?(payloadData)
-                        } else if type == 0x02 { // Heartbeat
+                        } else if type == 0x02 {
                             if let packet = try? JSONDecoder().decode(HeartbeatPacket.self, from: payloadData) {
                                 self?.onHeartbeatReceived?(packet)
                                 self?.peerBatteryLevel = packet.batteryLevel
                             }
                         }
                     }
-                    
-                    // Continue receiving
                     self?.startReceiving()
                 }
             }
         }
     }
 }
-

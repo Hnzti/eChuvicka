@@ -60,7 +60,7 @@ struct RoleSelectionView: View {
             iconName: "ear",
             gradientColors: [.green, .teal]
         ) {
-            coordinator.role = .parent
+            coordinator.startBrowsingAsParent()
         }
     }
 }

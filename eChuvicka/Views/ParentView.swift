@@ -5,7 +5,6 @@ import UIKit
 
 struct ParentView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
-    @State private var pin: String = ""
     @State private var isPressingPTT = false
     
     var body: some View {
@@ -37,34 +36,53 @@ struct ParentView: View {
             .background(Color.black.opacity(0.05).ignoresSafeArea(edges: .top))
             
             if !coordinator.isConnected {
-                // PIN Entry Screen
-                VStack(spacing: 30) {
-                    Spacer()
+                // Device Discovery Screen
+                VStack(spacing: 20) {
+                    Spacer().frame(height: 20)
                     
-                    Text("Zadejte PIN z dětské jednotky")
+                    Text("Vyberte dětskou jednotku")
                         .font(.system(.title3, design: .rounded, weight: .bold))
                     
-                    PINEntryView(pin: $pin)
-                    
-                    Button(action: {
-                        coordinator.startAsParent(pin: pin)
-                    }) {
-                        Text("Připojit")
-                            .font(.system(.title3, design: .rounded, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: 300)
-                            .padding(.vertical, 16)
-                            .background(
-                                pin.count == 6 ? Color.teal : Color.gray.opacity(0.5)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    if coordinator.discoveredDevices.isEmpty {
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.5)
+                            Text("Vyhledávání...")
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView {
+                            VStack(spacing: 12) {
+                                ForEach(coordinator.discoveredDevices, id: \.id) { device in
+                                    Button(action: {
+                                        coordinator.connectToDevice(device)
+                                    }) {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text("eChůvička")
+                                                    .font(.system(.headline, design: .rounded, weight: .bold))
+                                                Text("PIN: \(device.id)")
+                                                    .font(.system(.subheadline, design: .monospaced))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(.teal)
+                                        }
+                                        .padding()
+                                        .background(Color.secondary.opacity(0.1))
+                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
                     }
-                    .disabled(pin.count < 6)
-                    .buttonStyle(.plain)
-                    
-                    Spacer()
                 }
-                .padding()
             } else {
                 // Connected Monitoring Screen
                 VStack(spacing: 30) {
@@ -172,84 +190,3 @@ struct ParentView: View {
         return .green
     }
 }
-
-struct PINEntryView: View {
-    @Binding var pin: String
-    @FocusState private var isFocused: Bool
-    
-    var body: some View {
-        ZStack {
-            // Hidden but focusable TextField that captures all input
-            TextField("", text: $pin)
-                .focused($isFocused)
-                #if os(iOS)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-                #endif
-                .foregroundColor(.clear)
-                .accentColor(.clear)
-                .frame(width: 1, height: 1)
-                .opacity(0.01)
-                .onChange(of: pin) { _, newValue in
-                    var filtered = newValue.filter { $0.isNumber }
-                    if filtered.count > 6 {
-                        filtered = String(filtered.prefix(6))
-                    }
-                    if filtered != pin {
-                        pin = filtered
-                    }
-                }
-            
-            // Visual PIN boxes
-            HStack(spacing: 12) {
-                ForEach(0..<6, id: \.self) { index in
-                    PINBox(
-                        character: pin.count > index ? String(pin[pin.index(pin.startIndex, offsetBy: index)]) : "",
-                        isActive: isFocused && pin.count == index
-                    )
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                isFocused = true
-            }
-        }
-        .frame(height: 70)
-        .onAppear {
-            // Auto-focus on appear
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                isFocused = true
-            }
-        }
-    }
-}
-
-struct PINBox: View {
-    let character: String
-    let isActive: Bool
-    
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.secondary.opacity(0.1))
-            
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(isActive ? Color.teal : (character.isEmpty ? Color.clear : Color.teal.opacity(0.5)), lineWidth: 2)
-            
-            if !character.isEmpty {
-                Text(character)
-                    .font(.system(size: 32, weight: .bold, design: .monospaced))
-                    .transition(.scale.combined(with: .opacity))
-            } else if isActive {
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(Color.teal)
-                    .frame(width: 2, height: 24)
-                    .opacity(isActive ? 1 : 0)
-            }
-        }
-        .frame(width: 50, height: 60)
-        .animation(.easeInOut(duration: 0.15), value: character)
-        .animation(.easeInOut(duration: 0.3), value: isActive)
-    }
-}
-

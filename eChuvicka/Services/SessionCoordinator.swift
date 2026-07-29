@@ -42,6 +42,10 @@ public class SessionCoordinator: ObservableObject {
         networkManager.generatedPIN
     }
     
+    public var discoveredDevices: [DiscoveredDevice] {
+        networkManager.discoveredDevices
+    }
+    
     public init() {
         setupBindings()
     }
@@ -101,10 +105,14 @@ public class SessionCoordinator: ObservableObject {
         heartbeatMonitor.start(role: .child)
     }
     
-    public func startAsParent(pin: String) {
+    public func startBrowsingAsParent() {
         role = .parent
-        networkManager.startBrowsing(pin: pin)
-        audioManager.preparePlayback() // Prepare audio engine for receiving child's audio
+        networkManager.startBrowsing()
+    }
+    
+    public func connectToDevice(_ device: DiscoveredDevice) {
+        networkManager.connectToDevice(device)
+        audioManager.preparePlayback()
         heartbeatMonitor.start(role: .parent)
     }
     
@@ -128,4 +136,3 @@ public class SessionCoordinator: ObservableObject {
         heartbeatMonitor.stop()
     }
 }
-
