@@ -104,6 +104,7 @@ public class SessionCoordinator: ObservableObject {
     public func startAsParent(pin: String) {
         role = .parent
         networkManager.startBrowsing(pin: pin)
+        audioManager.preparePlayback() // Prepare audio engine for receiving child's audio
         heartbeatMonitor.start(role: .parent)
     }
     
@@ -123,6 +124,8 @@ public class SessionCoordinator: ObservableObject {
         role = .none
         networkManager.stop()
         audioManager.stopCapture()
+        audioManager.stopPlayback()
         heartbeatMonitor.stop()
     }
 }
+

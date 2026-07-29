@@ -2,6 +2,9 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 #endif
+#if canImport(IOKit)
+import IOKit.ps
+#endif
 import Combine
 
 public struct HeartbeatPacket: Codable, Sendable {
@@ -59,7 +62,7 @@ public class HeartbeatMonitor: ObservableObject {
     public func heartbeatReceived(_ packet: HeartbeatPacket) {
         dataReceived()
         let latency = Date().timeIntervalSince(packet.timestamp)
-        lastLatencyMs = latency * 1000.0
+        lastLatencyMs = max(0, latency * 1000.0)
     }
     
     private func checkConnectionAlive() {
@@ -76,12 +79,35 @@ public class HeartbeatMonitor: ObservableObject {
     public static func currentBatteryLevel() -> Float {
         #if os(iOS)
         UIDevice.current.isBatteryMonitoringEnabled = true
-        return UIDevice.current.batteryLevel
+        let level = UIDevice.current.batteryLevel
+        // batteryLevel returns -1.0 if monitoring is not enabled or unknown
+        return level >= 0 ? level : 1.0
         #elseif os(macOS)
-        // Simplified fallback for macOS, actual integration requires IOKit or other methods
-        return 1.0
+        return macOSBatteryLevel()
         #else
         return 1.0
         #endif
     }
+    
+    #if os(macOS)
+    private static func macOSBatteryLevel() -> Float {
+        guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [Any],
+              !sources.isEmpty else {
+            return 1.0 // Desktop Mac without battery
+        }
+        
+        for source in sources {
+            if let info = IOPSGetPowerSourceDescription(snapshot, source as CFTypeRef)?.takeUnretainedValue() as? [String: Any] {
+                if let capacity = info[kIOPSCurrentCapacityKey] as? Int,
+                   let maxCapacity = info[kIOPSMaxCapacityKey] as? Int,
+                   maxCapacity > 0 {
+                    return Float(capacity) / Float(maxCapacity)
+                }
+            }
+        }
+        
+        return 1.0
+    }
+    #endif
 }

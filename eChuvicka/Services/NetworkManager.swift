@@ -211,10 +211,6 @@ public class NetworkManager: ObservableObject {
     private func startReceiving() {
         guard let connection = connection else { return }
         
-        // Capture callbacks before entering the closure
-        let audioCallback = onAudioDataReceived
-        let heartbeatCallback = onHeartbeatReceived
-        
         // Read header: 1 byte type + 4 bytes length = 5 bytes
         connection.receive(minimumIncompleteLength: 5, maximumLength: 5) { [weak self] headerData, _, isComplete, error in
             if let error = error {
@@ -222,43 +218,41 @@ public class NetworkManager: ObservableObject {
                 return
             }
             
-            if let headerData = headerData, headerData.count == 5 {
-                let type = headerData[0]
-                let lengthData = headerData.subdata(in: 1..<5)
-                let length = UInt32(bigEndian: lengthData.withUnsafeBytes { $0.load(as: UInt32.self) })
+            guard let headerData = headerData, headerData.count == 5 else {
+                if !isComplete {
+                    Task { @MainActor in self?.startReceiving() }
+                }
+                return
+            }
+            
+            let type = headerData[0]
+            let lengthData = headerData.subdata(in: 1..<5)
+            let length = UInt32(bigEndian: lengthData.withUnsafeBytes { $0.load(as: UInt32.self) })
+            
+            // Read payload
+            connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { [weak self] payloadData, _, isComplete2, error2 in
+                if let error2 = error2 {
+                    print("Receive payload error: \(error2)")
+                    return
+                }
                 
-                // Read payload
-                connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { payloadData, _, isComplete2, error2 in
-                    if let error2 = error2 {
-                        print("Receive payload error: \(error2)")
-                        return
+                Task { @MainActor [weak self] in
+                    if let payloadData = payloadData {
+                        if type == 0x01 { // Audio
+                            self?.onAudioDataReceived?(payloadData)
+                        } else if type == 0x02 { // Heartbeat
+                            if let packet = try? JSONDecoder().decode(HeartbeatPacket.self, from: payloadData) {
+                                self?.onHeartbeatReceived?(packet)
+                                self?.peerBatteryLevel = packet.batteryLevel
+                            }
+                        }
                     }
                     
-                    if let payloadData = payloadData {
-                        Task { @MainActor in
-                            if type == 0x01 { // Audio
-                                audioCallback?(payloadData)
-                            } else if type == 0x02 { // Heartbeat
-                                if let packet = try? JSONDecoder().decode(HeartbeatPacket.self, from: payloadData) {
-                                    heartbeatCallback?(packet)
-                                    self?.peerBatteryLevel = packet.batteryLevel
-                                }
-                            }
-                            
-                            // Continue receiving
-                            self?.startReceiving()
-                        }
-                    } else if !isComplete2 {
-                        Task { @MainActor in
-                            self?.startReceiving()
-                        }
-                    }
-                }
-            } else if !isComplete {
-                Task { @MainActor in
+                    // Continue receiving
                     self?.startReceiving()
                 }
             }
         }
     }
 }
+
