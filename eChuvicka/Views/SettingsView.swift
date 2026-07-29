@@ -59,6 +59,7 @@ struct SettingsView: View {
                     Text("O aplikaci")
                 }
             }
+            .formStyle(.grouped)
             .navigationTitle("Nastavení")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -72,5 +73,8 @@ struct SettingsView: View {
                 }
             }
         }
+        #if os(macOS)
+        .frame(minWidth: 400, minHeight: 450)
+        #endif
     }
 }
