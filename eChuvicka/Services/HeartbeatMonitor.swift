@@ -23,11 +23,14 @@ public class HeartbeatMonitor: ObservableObject {
     
     public var onSendHeartbeat: (() -> Void)?
     
+    private var disconnectAlarmDelay: Double = 6.0
+    
     public init() {}
     
-    public func start(role: AppRole) {
+    public func start(role: AppRole, alarmDelay: Double = 6.0) {
         isConnectionAlive = true
         lastReceivedTimestamp = Date()
+        self.disconnectAlarmDelay = alarmDelay
         
         // Send heartbeat every 2 seconds
         heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
@@ -68,8 +71,8 @@ public class HeartbeatMonitor: ObservableObject {
     private func checkConnectionAlive() {
         guard let lastTimestamp = lastReceivedTimestamp else { return }
         
-        // If no data received for 6 seconds (3 missed heartbeats), mark as lost
-        if Date().timeIntervalSince(lastTimestamp) > 6.0 {
+        // If no data received for specified delay, mark as lost
+        if Date().timeIntervalSince(lastTimestamp) > disconnectAlarmDelay {
             if isConnectionAlive {
                 isConnectionAlive = false
             }

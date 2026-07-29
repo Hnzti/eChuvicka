@@ -74,6 +74,29 @@ public class SessionCoordinator: ObservableObject {
             }
         }
         
+        networkManager.$discoveredDevices.sink { [weak self] devices in
+            Task { @MainActor in
+                guard let self = self, self.role == .parent, self.appSettings.isAutoReconnectEnabled else { return }
+                let lastPIN = self.appSettings.lastConnectedPIN
+                if !lastPIN.isEmpty, !self.isConnected, let target = devices.first(where: { $0.name == lastPIN }) {
+                    print("Auto-reconnecting to \(lastPIN)")
+                    self.connectToDevice(target)
+                }
+            }
+        }.store(in: &cancellables)
+        
+        networkManager.$connectionMode.sink { [weak self] mode in
+            Task { @MainActor in
+                guard let self = self, self.role == .parent, self.appSettings.isAutoReconnectEnabled else { return }
+                if mode == .disconnected, !self.appSettings.lastConnectedPIN.isEmpty {
+                    // Try to browse again if disconnected
+                    if self.networkManager.connectionMode == .disconnected {
+                        self.networkManager.startBrowsing()
+                    }
+                }
+            }
+        }.store(in: &cancellables)
+        
         networkManager.onHeartbeatReceived = { [weak self] packet in
             Task { @MainActor in
                 self?.heartbeatMonitor.heartbeatReceived(packet)
@@ -102,7 +125,7 @@ public class SessionCoordinator: ObservableObject {
             self?.networkManager.sendAudioData(data)
             self?.heartbeatMonitor.dataReceived()
         }
-        heartbeatMonitor.start(role: .child)
+        heartbeatMonitor.start(role: .child, alarmDelay: appSettings.disconnectAlarmDelay)
     }
     
     public func startBrowsingAsParent() {
@@ -111,9 +134,11 @@ public class SessionCoordinator: ObservableObject {
     }
     
     public func connectToDevice(_ device: DiscoveredDevice) {
+        appSettings.lastConnectedPIN = device.name
+        audioManager.isAudioBoostEnabled = appSettings.isAudioBoostEnabled
         networkManager.connectToDevice(device)
         audioManager.preparePlayback()
-        heartbeatMonitor.start(role: .parent)
+        heartbeatMonitor.start(role: .parent, alarmDelay: appSettings.disconnectAlarmDelay)
     }
     
     public func startPTT() {

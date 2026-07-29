@@ -112,8 +112,14 @@ struct ParentView: View {
                             VStack(spacing: 16) {
                                 ProgressView()
                                     .scaleEffect(1.5)
-                                Text("Vyhledávání...")
-                                    .foregroundColor(.secondary)
+                                if coordinator.appSettings.isAutoReconnectEnabled && !coordinator.appSettings.lastConnectedPIN.isEmpty {
+                                    Text("Znovupřipojování...")
+                                        .foregroundColor(.teal)
+                                        .font(.headline)
+                                } else {
+                                    Text("Vyhledávání...")
+                                        .foregroundColor(.secondary)
+                                }
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         } else {
@@ -164,6 +170,17 @@ struct ParentView: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.red)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    } else if coordinator.appSettings.isLowBatteryAlertEnabled && coordinator.peerBatteryLevel <= 0.2 {
+                        HStack {
+                            Image(systemName: "battery.25")
+                            Text("Dítě má vybitou baterii!")
+                                .font(.system(.headline, design: .rounded, weight: .bold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.orange)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     }
                     

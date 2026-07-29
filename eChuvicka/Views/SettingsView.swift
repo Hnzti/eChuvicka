@@ -20,7 +20,9 @@ struct SettingsView: View {
                     }
                 }
                 
-                Text("Funkce VOX (Voice Operated eXchange) automaticky aktivuje přenos zvuku pouze při detekci hluku. To výrazně šetří baterii a snižuje šum na pozadí.")
+                Toggle("Zesílit příjem zvuku (Audio Boost 2x)", isOn: $settings.isAudioBoostEnabled)
+                
+                Text("Funkce VOX automaticky aktivuje přenos zvuku pouze při detekci hluku, což výrazně šetří baterii. Audio Boost softwarově zesílí tichý zvuk z dětské jednotky.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
@@ -30,11 +32,34 @@ struct SettingsView: View {
             Section {
                 Toggle("Alarm při ztrátě spojení", isOn: $settings.isDisconnectAlarmEnabled)
                 
-                Text("Spustí hlasitý alarm na rodičovské jednotce při ztrátě spojení s dětskou jednotkou.")
+                if settings.isDisconnectAlarmEnabled {
+                    Picker("Prodleva alarmu", selection: $settings.disconnectAlarmDelay) {
+                        Text("Okamžitě (6 sekund)").tag(6.0)
+                        Text("15 sekund").tag(15.0)
+                        Text("30 sekund").tag(30.0)
+                        Text("1 minuta").tag(60.0)
+                    }
+                }
+                
+                Toggle("Varování při nízké baterii dítěte (< 20 %)", isOn: $settings.isLowBatteryAlertEnabled)
+                
+                Toggle("Automatické znovupřipojení", isOn: $settings.isAutoReconnectEnabled)
+                
+                Text("Prodleva alarmu zabraňuje falešným poplachům při krátkých výpadcích Wi-Fi. Automatické znovupřipojení se pokusí samo navázat spojení bez nutnosti psát PIN.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("Upozornění")
+                Text("Upozornění a spojení (Rodič)")
+            }
+            
+            Section {
+                Toggle("Automatický noční režim (zčernání displeje)", isOn: $settings.isAutoNightModeEnabled)
+                
+                Text("Pokud je funkce aktivní, 10 sekund po úspěšném připojení se obrazovka dětské jednotky zcela zhasne (zčerná), aby světlo nerušilo spánek. Probudíte ji klepnutím.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } header: {
+                Text("Displej (Dítě)")
             }
             
             Section {
@@ -63,7 +88,7 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         #if os(macOS)
-        .frame(minWidth: 400, minHeight: 450)
+        .frame(minWidth: 450, minHeight: 600)
         #endif
     }
 }
