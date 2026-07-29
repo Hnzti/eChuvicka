@@ -39,17 +39,11 @@ struct ChildView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(.indigo)
-                    .sheet(isPresented: $showingSettings) {
-                        NavigationStack {
-                            SettingsView()
-                                .toolbar {
-                                    ToolbarItem(placement: .cancellationAction) {
-                                        Button("Zavřít") { showingSettings = false }
-                                    }
-                                }
-                        }
+                    .navigationDestination(isPresented: $showingSettings) {
+                        SettingsView()
                     }
                 }
+                .layoutPriority(1)
                 .padding()
                 #if os(iOS)
                 .background(Color.black.opacity(0.05).ignoresSafeArea(edges: .top))

@@ -20,19 +20,21 @@ struct ContentView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
     
     var body: some View {
-        Group {
-            switch coordinator.role {
-            case .none:
-                RoleSelectionView()
-                    .transition(.opacity.combined(with: .scale))
-            case .child:
-                ChildView()
-                    .transition(.move(edge: .trailing))
-            case .parent:
-                ParentView()
-                    .transition(.move(edge: .trailing))
+        NavigationStack {
+            Group {
+                switch coordinator.role {
+                case .none:
+                    RoleSelectionView()
+                        .transition(.opacity.combined(with: .scale))
+                case .child:
+                    ChildView()
+                        .transition(.move(edge: .trailing))
+                case .parent:
+                    ParentView()
+                        .transition(.move(edge: .trailing))
+                }
             }
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: coordinator.role)
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: coordinator.role)
     }
 }

@@ -44,17 +44,11 @@ struct ParentView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.teal)
-                .sheet(isPresented: $showingSettings) {
-                    NavigationStack {
-                        SettingsView()
-                            .toolbar {
-                                ToolbarItem(placement: .cancellationAction) {
-                                    Button("Zavřít") { showingSettings = false }
-                                }
-                            }
-                    }
+                .navigationDestination(isPresented: $showingSettings) {
+                    SettingsView()
                 }
             }
+            .layoutPriority(1)
             .padding()
             #if os(iOS)
             .background(Color.black.opacity(0.05).ignoresSafeArea(edges: .top))
@@ -216,7 +210,7 @@ struct ParentView: View {
                     )
                     .padding(.top, 20)
                     
-                    Spacer()
+                    Spacer(minLength: 0)
                     
                     // Audio Visualizer
                     ZStack {
@@ -242,7 +236,7 @@ struct ParentView: View {
                     .background(Color.secondary.opacity(0.1))
                     .clipShape(Capsule())
                     
-                    Spacer()
+                    Spacer(minLength: 0)
                     
                     // PTT Button
                     VStack(spacing: 12) {

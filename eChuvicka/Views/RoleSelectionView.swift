@@ -4,36 +4,34 @@ struct RoleSelectionView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 30) {
-                Spacer()
-                
-                VStack(spacing: 8) {
-                    Image(systemName: "moon.stars.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.indigo)
-                    Text("eChůvička")
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-                }
-                .padding(.bottom, 20)
-
-                ViewThatFits {
-                    HStack(spacing: 20) {
-                        cards
-                    }
-                    VStack(spacing: 20) {
-                        cards
-                    }
-                }
-                .padding(.horizontal, 30)
-                
-                Spacer()
+        VStack(spacing: 30) {
+            Spacer()
+            
+            VStack(spacing: 8) {
+                Image(systemName: "moon.stars.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.indigo)
+                Text("eChůvička")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
             }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    NavigationLink(destination: SettingsView()) {
-                        Label("Nastavení", systemImage: "gearshape")
-                    }
+            .padding(.bottom, 20)
+
+            ViewThatFits {
+                HStack(spacing: 20) {
+                    cards
+                }
+                VStack(spacing: 20) {
+                    cards
+                }
+            }
+            .padding(.horizontal, 30)
+            
+            Spacer()
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                NavigationLink(destination: SettingsView()) {
+                    Label("Nastavení", systemImage: "gearshape")
                 }
             }
         }

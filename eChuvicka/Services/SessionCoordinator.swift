@@ -47,6 +47,9 @@ public class SessionCoordinator: ObservableObject {
     }
     
     public init() {
+        #if os(iOS)
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        #endif
         setupBindings()
     }
     
