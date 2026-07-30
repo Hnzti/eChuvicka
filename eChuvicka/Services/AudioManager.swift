@@ -79,8 +79,8 @@ public class AudioManager: ObservableObject {
                 rms += sample * sample
             }
             rms = sqrt(rms / Float(frameLength))
-            // AudioLevel (Zesíleno 25x pro lepší dynamiku, mikrofon iPhonu je dost tichý)
-            let currentLevel = min(max(rms * 25.0, 0.0), 1.0)
+            // AudioLevel (Zesíleno 5x pro přirozenou dynamiku, bez VoiceChat filtru je raw zvuk mnohem silnější)
+            let currentLevel = min(max(rms * 5.0, 0.0), 1.0)
             
             // Convert to network format (16kHz mono) if needed
             let dataToSend: Data
