@@ -145,11 +145,13 @@ public class SessionCoordinator: ObservableObject {
             }
         }
         
-        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification).sink { [weak self] _ in
-            Task { @MainActor in
-                self?.sendCurrentSettingsToChild()
-            }
-        }.store(in: &cancellables)
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.sendCurrentSettingsToChild()
+                }
+            }.store(in: &cancellables)
         
         networkManager.$isConnected.sink { [weak self] connected in
             Task { @MainActor in
