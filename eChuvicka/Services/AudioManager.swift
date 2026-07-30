@@ -16,6 +16,7 @@ public class AudioManager: ObservableObject {
     private var voxHoldTime: Double = 15.0
     private var lastVOXTriggerDate: Date?
     private var onAudioCaptured: ((Data) -> Void)?
+    private var audioConverter: AVAudioConverter?
     
     // Fixed sample rate for network transmission (both sides must agree)
     private let networkSampleRate: Double = 16000
@@ -56,6 +57,12 @@ public class AudioManager: ObservableObject {
         let inputNode = engine.inputNode
         let hardwareFormat = inputNode.outputFormat(forBus: 0)
         
+        if hardwareFormat.sampleRate != self.networkSampleRate || hardwareFormat.channelCount != 1 {
+            self.audioConverter = AVAudioConverter(from: hardwareFormat, to: self.networkFormat)
+        } else {
+            self.audioConverter = nil
+        }
+        
         // Install tap using the hardware's native format
         inputNode.installTap(onBus: 0, bufferSize: 4096, format: hardwareFormat) { [weak self] buffer, _ in
             guard let self = self, self.isCaptureActive else { return }
@@ -75,8 +82,8 @@ public class AudioManager: ObservableObject {
             
             // Convert to network format (16kHz mono) if needed
             let dataToSend: Data
-            if hardwareFormat.sampleRate != self.networkSampleRate || hardwareFormat.channelCount != 1 {
-                if let converted = self.convertBuffer(buffer, from: hardwareFormat, to: self.networkFormat) {
+            if self.audioConverter != nil {
+                if let converted = self.convertBuffer(buffer) {
                     let convertedLength = Int(converted.frameLength)
                     if let convertedData = converted.floatChannelData?[0], convertedLength > 0 {
                         dataToSend = Data(bytes: convertedData, count: convertedLength * MemoryLayout<Float>.size)
@@ -203,14 +210,14 @@ public class AudioManager: ObservableObject {
     
     // MARK: - Sample Rate Conversion
     
-    private func convertBuffer(_ inputBuffer: AVAudioPCMBuffer, from inputFormat: AVAudioFormat, to outputFormat: AVAudioFormat) -> AVAudioPCMBuffer? {
-        guard let converter = AVAudioConverter(from: inputFormat, to: outputFormat) else { return nil }
+    private func convertBuffer(_ inputBuffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+        guard let converter = self.audioConverter else { return nil }
         
-        let ratio = outputFormat.sampleRate / inputFormat.sampleRate
+        let ratio = converter.outputFormat.sampleRate / converter.inputFormat.sampleRate
         let outputFrameCount = AVAudioFrameCount(Double(inputBuffer.frameLength) * ratio)
         guard outputFrameCount > 0 else { return nil }
         
-        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: outputFrameCount) else { return nil }
+        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: converter.outputFormat, frameCapacity: outputFrameCount) else { return nil }
         
         var error: NSError?
         converter.convert(to: outputBuffer, error: &error) { _, outStatus in
