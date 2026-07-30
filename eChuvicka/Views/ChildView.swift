@@ -97,13 +97,24 @@ struct ChildView: View {
                         // Status Text
                         VStack(spacing: 8) {
                             if coordinator.isConnected {
-                                HStack(spacing: 8) {
-                                    Circle()
-                                        .fill(Color.green)
-                                        .frame(width: 10, height: 10)
-                                    Text("SNÍMÁNÍ ZVUKU AKTIVNÍ")
-                                        .font(.system(.headline, design: .rounded, weight: .bold))
-                                        .foregroundColor(.green)
+                                if coordinator.audioManager.isTransmitting {
+                                    HStack(spacing: 8) {
+                                        Circle()
+                                            .fill(Color.orange)
+                                            .frame(width: 12, height: 12)
+                                        Text("PŘENÁŠÍ ZVUK K RODIČI!")
+                                            .font(.system(.headline, design: .rounded, weight: .bold))
+                                            .foregroundColor(.orange)
+                                    }
+                                } else {
+                                    HStack(spacing: 8) {
+                                        Circle()
+                                            .fill(Color.green)
+                                            .frame(width: 10, height: 10)
+                                        Text("MIKROFON JE ZAPNUTÝ")
+                                            .font(.system(.headline, design: .rounded, weight: .bold))
+                                            .foregroundColor(.green)
+                                    }
                                 }
                                 
                                 // Parent speaking indicator
