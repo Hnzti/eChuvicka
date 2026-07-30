@@ -13,6 +13,9 @@ public class SessionCoordinator: ObservableObject {
     public let heartbeatMonitor = HeartbeatMonitor()
     public let appSettings = AppSettings()
     
+    @Published public var isParentSpeaking: Bool = false
+    private var parentSpeakingTimer: Timer?
+    
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Convenience properties for Views
@@ -75,8 +78,17 @@ public class SessionCoordinator: ObservableObject {
         // Setup NetworkManager callbacks
         networkManager.onAudioDataReceived = { [weak self] data in
             Task { @MainActor in
-                self?.heartbeatMonitor.dataReceived()
-                self?.audioManager.playReceivedAudio(data)
+                guard let self = self else { return }
+                self.heartbeatMonitor.dataReceived()
+                self.audioManager.playReceivedAudio(data)
+                
+                if self.role == .child {
+                    self.isParentSpeaking = true
+                    self.parentSpeakingTimer?.invalidate()
+                    self.parentSpeakingTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+                        Task { @MainActor in self?.isParentSpeaking = false }
+                    }
+                }
             }
         }
         

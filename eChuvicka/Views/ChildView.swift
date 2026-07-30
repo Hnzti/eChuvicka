@@ -118,7 +118,7 @@ struct ChildView: View {
                                 }
                                 
                                 // Parent speaking indicator
-                                if coordinator.isConnectionAlive && false /* replace with isParentSpeaking */ {
+                                if coordinator.isParentSpeaking {
                                     Text("Rodič mluví...")
                                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                         .foregroundColor(.blue)
