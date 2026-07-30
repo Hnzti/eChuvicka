@@ -78,7 +78,8 @@ public class AudioManager: ObservableObject {
                 rms += sample * sample
             }
             rms = sqrt(rms / Float(frameLength))
-            let currentLevel = min(max(rms * 5.0, 0.0), 1.0)
+            // AudioLevel (Zesíleno 25x pro lepší dynamiku, mikrofon iPhonu je dost tichý)
+            let currentLevel = min(max(rms * 25.0, 0.0), 1.0)
             
             // Convert to network format (16kHz mono) if needed
             let dataToSend: Data
@@ -100,9 +101,9 @@ public class AudioManager: ObservableObject {
             Task { @MainActor in
                 self.audioLevel = currentLevel
                 
-                // 100% citlivost = práh 0.05 (velmi snadné spuštění, reaguje na šum)
-                // 0% citlivost = práh 0.85 (nutný obrovský hluk / pláč přímo u mikrofonu)
-                let actualThreshold = (1.0 - self.voxThreshold) * 0.8 + 0.05
+                // 100% citlivost = práh 0.02 (velmi snadné spuštění, reaguje na šum)
+                // 0% citlivost = práh 0.92 (nutný obrovský hluk / pláč přímo u mikrofonu)
+                let actualThreshold = (1.0 - self.voxThreshold) * 0.9 + 0.02
                 
                 var shouldTransmit = false
                 
