@@ -2,15 +2,17 @@ import SwiftUI
 
 struct AudioLevelView: View {
     var audioLevel: Float
-    var isTransmitting: Bool
+    var isCapturing: Bool // Zda se má vizualizér hýbat (vždy když je připojen)
+    var isTransmitting: Bool // Zda se skutečně odesílají data k rodiči (barva)
     
     @State private var phase: CGFloat = 0
     
     var body: some View {
         let level = CGFloat(min(max(audioLevel, 0), 1))
-        let isActive = isTransmitting && level > 0.01
+        let isActive = isCapturing && level > 0.01
         
-        let color: Color = level > 0.7 ? .red : (level > 0.4 ? .orange : .blue)
+        // Barva vizualizéru reflektuje skutečný přenos
+        let color: Color = isTransmitting ? .orange : .blue
         
         ZStack {
             // Background circles

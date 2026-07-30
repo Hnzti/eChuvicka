@@ -214,7 +214,7 @@ struct ParentView: View {
                     
                     // Audio Visualizer
                     ZStack {
-                        AudioLevelView(audioLevel: coordinator.audioLevel, isTransmitting: coordinator.audioLevel > 0.05)
+                        AudioLevelView(audioLevel: coordinator.audioLevel, isCapturing: coordinator.isConnectionAlive, isTransmitting: coordinator.audioLevel > 0.05)
                             .frame(minHeight: 100, idealHeight: 250, maxHeight: 300)
                         
                         if coordinator.audioLevel <= 0.05 {

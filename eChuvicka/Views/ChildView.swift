@@ -90,7 +90,7 @@ struct ChildView: View {
                         
                         // Audio Visualizer
                         ZStack {
-                            AudioLevelView(audioLevel: coordinator.audioLevel, isTransmitting: coordinator.isConnected)
+                            AudioLevelView(audioLevel: coordinator.audioLevel, isCapturing: coordinator.isConnected, isTransmitting: coordinator.audioManager.isTransmitting)
                                 .frame(height: 200)
                         }
                         
