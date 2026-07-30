@@ -30,7 +30,8 @@ public class AudioManager: ObservableObject {
         #if os(iOS)
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetoothA2DP])
+            // .default režim nevynucuje agresivní potlačení šumu a echa jako .voiceChat
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothA2DP])
             try session.setPreferredSampleRate(networkSampleRate)
             try session.setActive(true)
         } catch {
