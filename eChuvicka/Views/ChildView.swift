@@ -136,6 +136,7 @@ struct ChildView: View {
                     }
             }
         } // Ends ZStack
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         #if os(iOS)
         .statusBarHidden(isNightModeActive)
         #endif

@@ -179,7 +179,7 @@ struct ParentView: View {
                 }
             } else {
                 // Connected Monitoring Screen
-                VStack(spacing: 30) {
+                VStack(spacing: 16) {
                     if !coordinator.isConnectionAlive {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
@@ -215,7 +215,7 @@ struct ParentView: View {
                     // Audio Visualizer
                     ZStack {
                         AudioLevelView(audioLevel: coordinator.audioLevel, isTransmitting: coordinator.audioLevel > 0.05)
-                            .frame(height: 250)
+                            .frame(minHeight: 100, idealHeight: 250, maxHeight: 300)
                         
                         if coordinator.audioLevel <= 0.05 {
                             Image(systemName: "speaker.wave.2")
@@ -274,10 +274,12 @@ struct ParentView: View {
                                 }
                         )
                     }
-                    .padding(.bottom, 50)
+                    .padding(.bottom, 20)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(.default, value: coordinator.isConnected)
         .animation(.default, value: coordinator.isConnectionAlive)
         .animation(.default, value: selectedDevice)
