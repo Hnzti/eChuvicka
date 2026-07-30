@@ -72,15 +72,23 @@ public class AudioManager: ObservableObject {
             let frameLength = Int(buffer.frameLength)
             guard frameLength > 0 else { return }
             
-            // Calculate RMS for level metering
+            // Zesílení surového zvuku (nahrazuje vypnuté systémové AGC)
+            let softwareGain: Float = 4.0
+            
             var rms: Float = 0.0
             for i in 0..<frameLength {
-                let sample = channelData[i]
+                // Aplikace zisku a oříznutí proti praskání (clipping)
+                var sample = channelData[i] * softwareGain
+                if sample > 1.0 { sample = 1.0 }
+                else if sample < -1.0 { sample = -1.0 }
+                
+                channelData[i] = sample
                 rms += sample * sample
             }
             rms = sqrt(rms / Float(frameLength))
-            // AudioLevel (Zesíleno 5x pro přirozenou dynamiku, bez VoiceChat filtru je raw zvuk mnohem silnější)
-            let currentLevel = min(max(rms * 5.0, 0.0), 1.0)
+            
+            // AudioLevel pro vizualizér a VOX (už je zesíleno 4x nahoře, takže stačí malý dodatečný multiplikátor)
+            let currentLevel = min(max(rms * 2.0, 0.0), 1.0)
             
             // Convert to network format (16kHz mono) if needed
             let dataToSend: Data
