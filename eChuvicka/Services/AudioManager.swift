@@ -110,9 +110,9 @@ public class AudioManager: ObservableObject {
             Task { @MainActor in
                 self.audioLevel = currentLevel
                 
-                // 100% citlivost = práh 0.02 (velmi snadné spuštění, reaguje na šum)
-                // 0% citlivost = práh 0.92 (nutný obrovský hluk / pláč přímo u mikrofonu)
-                let actualThreshold = (1.0 - self.voxThreshold) * 0.9 + 0.02
+                // Slider 0 % → threshold 0.5 (less sensitive)
+                // Slider 100 % → threshold 0.005 (very sensitive)
+                let actualThreshold = (1.0 - self.voxThreshold) * 0.495 + 0.005
                 
                 var shouldTransmit = false
                 
