@@ -153,7 +153,8 @@ struct ChildView: View {
             NavigationStack {
                 SettingsView(
                     role: .child,
-                    onCommitDeviceName: { coordinator.applyDeviceNameChange() }
+                    onCommitDeviceName: { coordinator.applyDeviceNameChange() },
+                    onPinRequirementChange: { coordinator.applyPinRequirementChange() }
                 )
                 .environmentObject(settings)
                 .toolbar {

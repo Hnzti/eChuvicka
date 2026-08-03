@@ -5,13 +5,19 @@ struct SettingsView: View {
     
     let role: AppRole
     let onCommitDeviceName: () -> Void
+    var onPinRequirementChange: () -> Void = {}
     
     @State private var deviceNameDraft = ""
     @FocusState private var isDeviceNameFocused: Bool
     
-    init(role: AppRole = .none, onCommitDeviceName: @escaping () -> Void = {}) {
+    init(
+        role: AppRole = .none,
+        onCommitDeviceName: @escaping () -> Void = {},
+        onPinRequirementChange: @escaping () -> Void = {}
+    ) {
         self.role = role
         self.onCommitDeviceName = onCommitDeviceName
+        self.onPinRequirementChange = onPinRequirementChange
     }
 
     var body: some View {
@@ -119,14 +125,17 @@ struct SettingsView: View {
             }
             
             if role == .child {
-            Section {
-                Toggle("Vyžadovat párovací PIN", isOn: $settings.isPinRequired)
-                
-                Text("Bez PINu se na stejné síti může k dětské jednotce připojit kdokoliv s aplikací eChůvička.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } header: {
-                Text("Zabezpečení")
+                Section {
+                    Toggle("Vyžadovat párovací PIN", isOn: $settings.isPinRequired)
+                        .onChange(of: settings.isPinRequired) { _, _ in
+                            onPinRequirementChange()
+                        }
+                    
+                    Text("Bez PINu se na stejné síti může k dětské jednotce připojit kdokoliv s aplikací eChůvička. Změna se projeví hned ve vysílání dětské jednotky.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } header: {
+                    Text("Zabezpečení")
                 }
             }
             

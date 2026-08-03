@@ -139,6 +139,9 @@ public class SessionCoordinator: ObservableObject {
                 self.appSettings.displayOffDelay = packet.displayOffDelay
                 self.appSettings.isPinRequired = packet.isPinRequired
                 
+                // Apply PIN/OPEN to the live Bonjour advertisement immediately.
+                self.networkManager.updatePinRequirement(packet.isPinRequired)
+                
                 // Okamžitě restartovat záznam s novými hodnotami
                 self.audioManager.startCapture(
                     voxEnabled: packet.isVOXEnabled,
@@ -204,6 +207,11 @@ public class SessionCoordinator: ObservableObject {
                 networkManager.sendDeviceInfo()
             }
         }
+    }
+    
+    public func applyPinRequirementChange() {
+        guard role == .child else { return }
+        networkManager.updatePinRequirement(appSettings.isPinRequired)
     }
     
     public func startAsChild() {

@@ -304,6 +304,24 @@ struct ParentView: View {
             #endif
         }
         .onReceive(coordinator.audioManager.$audioLevel) { _ in }
+        .onChange(of: coordinator.discoveredDevices) { _, devices in
+            guard let selected = selectedDevice else { return }
+            if let updated = devices.first(where: { $0.id == selected.id }) {
+                selectedDevice = updated
+                // Child turned PIN off — leave the PIN screen and connect directly.
+                if !updated.requiresPin {
+                    pin = ""
+                    showPinError = false
+                    selectedDevice = nil
+                    coordinator.connectToDevice(updated)
+                }
+            } else if !devices.contains(where: { $0.id == selected.id }) {
+                // Advertisement disappeared while switching PIN/OPEN.
+                selectedDevice = nil
+                pin = ""
+                showPinError = false
+            }
+        }
     }
     
     private var resolvedDeviceName: String {

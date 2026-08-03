@@ -18,10 +18,12 @@ public struct DiscoveredDevice: Identifiable, Hashable {
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+        hasher.combine(requiresPin)
+        hasher.combine(displayName)
     }
     
     public static func == (lhs: DiscoveredDevice, rhs: DiscoveredDevice) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id && lhs.requiresPin == rhs.requiresPin && lhs.displayName == rhs.displayName
     }
 }
 
@@ -102,9 +104,25 @@ public class NetworkManager: ObservableObject {
     /// Re-publishes the Bonjour service after the user changes the device name.
     public func refreshAdvertisedDeviceName() {
         guard let listener = listener, !hostedPairingPart.isEmpty else { return }
-        let instanceName = advertisedInstanceName()
         listener.service = makeAdvertisedService()
-        print("[Child] Re-advertising as \(instanceName)")
+        print("[Child] Re-advertising as \(advertisedInstanceName())")
+    }
+    
+    /// Switches PIN/OPEN in the live Bonjour name without regenerating the code.
+    public func updatePinRequirement(_ isPinRequired: Bool) {
+        guard listener != nil, !hostedPairingPart.isEmpty else { return }
+        
+        let pin = hostedPairingPart.components(separatedBy: "-").last ?? generatedPIN
+        let newPrefix = isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-"
+        let newPairingPart = newPrefix + pin
+        guard newPairingPart != hostedPairingPart else { return }
+        
+        hostedPairingPart = newPairingPart
+        if isPinRequired {
+            generatedPIN = pin
+        }
+        listener?.service = makeAdvertisedService()
+        print("[Child] PIN requirement updated, advertising as \(advertisedInstanceName())")
     }
     
     public func startHosting(isPinRequired: Bool) {
