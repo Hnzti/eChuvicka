@@ -10,8 +10,9 @@ public enum ConnectionMode: String, Sendable {
 
 /// Represents a discovered child device
 public struct DiscoveredDevice: Identifiable, Hashable {
-    public let id: String  // PIN or UUID
+    public let id: String  // PIN
     public let name: String
+    public let displayName: String
     public let requiresPin: Bool
     public let endpoint: NWEndpoint
     
@@ -24,18 +25,35 @@ public struct DiscoveredDevice: Identifiable, Hashable {
     }
 }
 
+public struct DeviceInfoPacket: Codable, Sendable {
+    public let deviceName: String
+
+    public init(deviceName: String) {
+        self.deviceName = deviceName
+    }
+}
+
 public struct SettingsPacket: Codable, Sendable {
     public let isVOXEnabled: Bool
     public let voxSensitivity: Double
     public let voxHoldTime: Double
     public let isAutoNightModeEnabled: Bool
+    public let displayOffDelay: Double
     public let isPinRequired: Bool
     
-    public init(isVOXEnabled: Bool, voxSensitivity: Double, voxHoldTime: Double, isAutoNightModeEnabled: Bool, isPinRequired: Bool) {
+    public init(
+        isVOXEnabled: Bool,
+        voxSensitivity: Double,
+        voxHoldTime: Double,
+        isAutoNightModeEnabled: Bool,
+        displayOffDelay: Double,
+        isPinRequired: Bool
+    ) {
         self.isVOXEnabled = isVOXEnabled
         self.voxSensitivity = voxSensitivity
         self.voxHoldTime = voxHoldTime
         self.isAutoNightModeEnabled = isAutoNightModeEnabled
+        self.displayOffDelay = displayOffDelay
         self.isPinRequired = isPinRequired
     }
 }
@@ -47,6 +65,7 @@ public class NetworkManager: ObservableObject {
     @Published public var generatedPIN: String = ""
     @Published public var peerBatteryLevel: Float = 1.0
     @Published public var discoveredDevices: [DiscoveredDevice] = []
+    @Published public var connectedDeviceName: String?
     
     public var onAudioDataReceived: (@Sendable (Data) -> Void)?
     public var onHeartbeatReceived: (@Sendable (HeartbeatPacket) -> Void)?
@@ -57,24 +76,51 @@ public class NetworkManager: ObservableObject {
     private var connection: NWConnection?
     
     private let serviceType = "_echuvicka._tcp"
+    private var hostedPairingPart = ""
     
     public init() {}
     
     // MARK: - Child / Transmitter
     
+    private func advertisedInstanceName() -> String {
+        let budget = 63 - hostedPairingPart.utf8.count - DeviceName.serviceSeparator.utf8.count
+        let label = DeviceName.labelForService(availableBytes: max(0, budget), role: .child)
+        return label.isEmpty
+            ? hostedPairingPart
+            : "\(hostedPairingPart)\(DeviceName.serviceSeparator)\(label)"
+    }
+    
+    private func makeAdvertisedService() -> NWListener.Service {
+        let instanceName = advertisedInstanceName()
+        return NWListener.Service(
+            name: instanceName,
+            type: serviceType,
+            txtRecord: NWTXTRecord(["deviceName": DeviceName.current(for: .child)])
+        )
+    }
+    
+    /// Re-publishes the Bonjour service after the user changes the device name.
+    public func refreshAdvertisedDeviceName() {
+        guard let listener = listener, !hostedPairingPart.isEmpty else { return }
+        let instanceName = advertisedInstanceName()
+        listener.service = makeAdvertisedService()
+        print("[Child] Re-advertising as \(instanceName)")
+    }
+    
     public func startHosting(isPinRequired: Bool) {
-        stop() // Clean up any previous state
+        stop()
         
         let pin = String(format: "%04d", Int.random(in: 0...9999))
-        self.generatedPIN = pin
+        generatedPIN = pin
         
         let params = NWParameters.tcp
         params.includePeerToPeer = true
         
         do {
             let nwListener = try NWListener(using: params)
-            let namePrefix = isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-"
-            nwListener.service = NWListener.Service(name: "\(namePrefix)\(pin)", type: serviceType)
+            hostedPairingPart = (isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-") + pin
+            nwListener.service = makeAdvertisedService()
+            print("[Child] Advertising as \(advertisedInstanceName())")
             
             nwListener.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor in
@@ -102,8 +148,8 @@ public class NetworkManager: ObservableObject {
             }
             
             nwListener.start(queue: .main)
-            self.listener = nwListener
-            self.connectionMode = .searching
+            listener = nwListener
+            connectionMode = .searching
             
         } catch {
             print("[Child] Failed to start listener: \(error)")
@@ -112,9 +158,8 @@ public class NetworkManager: ObservableObject {
     
     // MARK: - Parent / Receiver
     
-    /// Start browsing for child devices — populates discoveredDevices list
     public func startBrowsing() {
-        stop() // Clean up any previous state
+        stop()
         
         let params = NWParameters.tcp
         params.includePeerToPeer = true
@@ -139,42 +184,54 @@ public class NetworkManager: ObservableObject {
             }
         }
         
-        nwBrowser.browseResultsChangedHandler = { [weak self] results, changes in
+        nwBrowser.browseResultsChangedHandler = { [weak self] results, _ in
             Task { @MainActor in
                 guard let self = self else { return }
                 var devices: [DiscoveredDevice] = []
+                
                 for result in results {
-                    if case let .service(name, _, _, _) = result.endpoint {
-                        let requiresPin = name.contains("-PIN-")
-                        let id = name.components(separatedBy: "-").last ?? ""
-                        devices.append(DiscoveredDevice(
-                            id: id,
-                            name: name,
-                            requiresPin: requiresPin,
-                            endpoint: result.endpoint
-                        ))
+                    guard case let .service(name, _, _, _) = result.endpoint else { continue }
+                    
+                    let requiresPin = name.contains("-PIN-")
+                    let id = DeviceName.pairingPIN(fromServiceInstanceName: name)
+                    
+                    var txtName: String?
+                    if case .bonjour(let txtRecord) = result.metadata {
+                        txtName = txtRecord["deviceName"]
                     }
+                    let displayName = DeviceName.displayName(
+                        fromServiceInstanceName: name,
+                        txtDeviceName: txtName
+                    )
+                    
+                    devices.append(DiscoveredDevice(
+                        id: id,
+                        name: name,
+                        displayName: displayName,
+                        requiresPin: requiresPin,
+                        endpoint: result.endpoint
+                    ))
                 }
+                
                 self.discoveredDevices = devices
-                print("[Parent] Found \(devices.count) device(s)")
+                print("[Parent] Found \(devices.count) device(s): \(devices.map(\.displayName))")
             }
         }
         
         nwBrowser.start(queue: .main)
-        self.browser = nwBrowser
-        self.connectionMode = .searching
+        browser = nwBrowser
+        connectionMode = .searching
     }
     
-    /// Connect to a specific discovered device
     public func connectToDevice(_ device: DiscoveredDevice) {
-        print("[Parent] Connecting to device: \(device.name)")
+        connectedDeviceName = device.displayName
+        print("[Parent] Connecting to device: \(device.displayName) (\(device.name))")
         
         let params = NWParameters.tcp
         params.includePeerToPeer = true
         
         let newConnection = NWConnection(to: device.endpoint, using: params)
         
-        // Stop browsing once we're connecting
         browser?.cancel()
         browser = nil
         
@@ -184,7 +241,6 @@ public class NetworkManager: ObservableObject {
     // MARK: - Connection Setup
     
     private func setupConnection(_ newConnection: NWConnection) {
-        // Cancel old connection if any
         if let old = connection {
             old.stateUpdateHandler = nil
             old.cancel()
@@ -202,6 +258,7 @@ public class NetworkManager: ObservableObject {
                     self.isConnected = true
                     self.connectionMode = .connectedRouter
                     self.startReceiving()
+                    self.sendDeviceInfo()
                 case .failed(let error):
                     print("[Connection] Failed: \(error)")
                     self.handleDisconnect()
@@ -231,12 +288,14 @@ public class NetworkManager: ObservableObject {
     private func handleDisconnect() {
         isConnected = false
         connectionMode = .disconnected
+        connectedDeviceName = nil
         connection = nil
     }
     
     public func stop() {
         listener?.cancel()
         listener = nil
+        hostedPairingPart = ""
         
         browser?.cancel()
         browser = nil
@@ -250,6 +309,7 @@ public class NetworkManager: ObservableObject {
         isConnected = false
         connectionMode = .disconnected
         discoveredDevices = []
+        connectedDeviceName = nil
     }
     
     // MARK: - Data Transfer
@@ -266,6 +326,12 @@ public class NetworkManager: ObservableObject {
     public func sendSettings(_ packet: SettingsPacket) {
         guard let data = try? JSONEncoder().encode(packet) else { return }
         sendFramedMessage(type: 0x03, payload: data)
+    }
+    
+    public func sendDeviceInfo() {
+        let packet = DeviceInfoPacket(deviceName: DeviceName.current(for: .child))
+        guard let data = try? JSONEncoder().encode(packet) else { return }
+        sendFramedMessage(type: 0x04, payload: data)
     }
     
     private func sendFramedMessage(type: UInt8, payload: Data) {
@@ -326,6 +392,12 @@ public class NetworkManager: ObservableObject {
                         } else if type == 0x03 {
                             if let packet = try? JSONDecoder().decode(SettingsPacket.self, from: payloadData) {
                                 self?.onSettingsReceived?(packet)
+                            }
+                        } else if type == 0x04 {
+                            if let packet = try? JSONDecoder().decode(DeviceInfoPacket.self, from: payloadData),
+                               !packet.deviceName.isEmpty {
+                                self?.connectedDeviceName = packet.deviceName
+                                print("[Connection] Peer device name: \(packet.deviceName)")
                             }
                         }
                     }

@@ -2,9 +2,11 @@ import SwiftUI
 
 struct ChildView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
+    @EnvironmentObject var settings: AppSettings
     @Environment(\.colorScheme) var colorScheme
     @State private var isNightModeActive = false
     @State private var showingSettings = false
+    @State private var displayOffTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -12,6 +14,7 @@ struct ChildView: View {
                 // Header
                 HStack {
                     Button(action: {
+                        cancelDisplayOff()
                         coordinator.stop()
                         coordinator.role = .none
                     }) {
@@ -26,7 +29,7 @@ struct ChildView: View {
                     
                     Spacer()
                     
-                    Text("Dětská jednotka")
+                    Text(resolvedDeviceName)
                         .font(.system(.headline, design: .rounded, weight: .bold))
                     
                     Spacer()
@@ -39,9 +42,6 @@ struct ChildView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(.indigo)
-                    .navigationDestination(isPresented: $showingSettings) {
-                        SettingsView()
-                    }
                 }
                 .layoutPriority(1)
                 .padding()
@@ -117,7 +117,6 @@ struct ChildView: View {
                                     }
                                 }
                                 
-                                // Parent speaking indicator
                                 if coordinator.isParentSpeaking {
                                     Text("Rodič mluví...")
                                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
@@ -134,38 +133,102 @@ struct ChildView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
                 }
-            } // Ends VStack
+            }
             
-            // Night mode overlay in ZStack
+            // Display off — black screen, not locked; tap wakes.
             if isNightModeActive {
                 Color.black
                     .ignoresSafeArea()
+                    .contentShape(Rectangle())
                     .onTapGesture {
-                        withAnimation {
-                            isNightModeActive = false
-                        }
+                        wakeDisplay()
                     }
             }
-        } // Ends ZStack
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         #if os(iOS)
         .statusBarHidden(isNightModeActive)
         #endif
-        .onChange(of: coordinator.isConnected) { _, isConnected in
-            if isConnected && coordinator.appSettings.isAutoNightModeEnabled {
-                Task {
-                    try? await Task.sleep(nanoseconds: 10_000_000_000)
-                    if coordinator.isConnected {
-                        withAnimation {
-                            isNightModeActive = true
+        .sheet(isPresented: $showingSettings) {
+            NavigationStack {
+                SettingsView(
+                    role: .child,
+                    onCommitDeviceName: { coordinator.applyDeviceNameChange() }
+                )
+                .environmentObject(settings)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Hotovo") {
+                            showingSettings = false
                         }
                     }
                 }
+            }
+            #if os(macOS)
+            .frame(minWidth: 420, minHeight: 520)
+            #endif
+        }
+        .onReceive(coordinator.audioManager.$audioLevel) { _ in }
+        .onReceive(coordinator.audioManager.$isTransmitting) { _ in }
+        .onChange(of: coordinator.isConnected) { _, isConnected in
+            if isConnected {
+                scheduleDisplayOffIfNeeded()
             } else {
+                cancelDisplayOff()
+                        withAnimation {
+                    isNightModeActive = false
+                        }
+                    }
+                }
+        .onChange(of: settings.isAutoNightModeEnabled) { _, enabled in
+            if enabled, coordinator.isConnected {
+                scheduleDisplayOffIfNeeded()
+            } else {
+                cancelDisplayOff()
                 withAnimation {
                     isNightModeActive = false
                 }
             }
         }
-    } // Ends body
+        .onChange(of: settings.displayOffDelay) { _, _ in
+            if coordinator.isConnected, settings.isAutoNightModeEnabled, !isNightModeActive {
+                scheduleDisplayOffIfNeeded()
+            }
+        }
+        .onDisappear {
+            cancelDisplayOff()
+        }
+    }
+    
+    private var resolvedDeviceName: String {
+        let custom = settings.deviceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return custom.isEmpty ? DeviceName.defaultName(for: .child) : custom
+    }
+    
+    private func scheduleDisplayOffIfNeeded() {
+        cancelDisplayOff()
+        guard settings.isAutoNightModeEnabled, coordinator.isConnected else { return }
+        
+        let delay = max(5, min(30, settings.displayOffDelay))
+        displayOffTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            guard coordinator.isConnected, settings.isAutoNightModeEnabled else { return }
+            withAnimation {
+                isNightModeActive = true
+            }
+        }
+    }
+    
+    private func wakeDisplay() {
+        withAnimation {
+            isNightModeActive = false
+        }
+        scheduleDisplayOffIfNeeded()
+    }
+    
+    private func cancelDisplayOff() {
+        displayOffTask?.cancel()
+        displayOffTask = nil
+    }
 }

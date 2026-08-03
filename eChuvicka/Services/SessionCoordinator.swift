@@ -15,6 +15,7 @@ public class SessionCoordinator: ObservableObject {
     
     @Published public var isParentSpeaking: Bool = false
     private var parentSpeakingTimer: Timer?
+    private var deviceNameRefreshTask: Task<Void, Never>?
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -52,6 +53,10 @@ public class SessionCoordinator: ObservableObject {
         networkManager.discoveredDevices
     }
     
+    public var connectedDeviceName: String? {
+        networkManager.connectedDeviceName
+    }
+    
     public init() {
         #if os(iOS)
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -65,10 +70,9 @@ public class SessionCoordinator: ObservableObject {
             self?.objectWillChange.send()
         }.store(in: &cancellables)
         
-        // Forward AudioManager state changes
-        audioManager.objectWillChange.sink { [weak self] in
-            self?.objectWillChange.send()
-        }.store(in: &cancellables)
+        // AudioManager publishes very frequently (every audio buffer). Views that need
+        // levels must observe audioManager directly — forwarding here would rebuild
+        // Parent/Child (and steal TextField focus in Settings) dozens of times per second.
         
         // Forward HeartbeatMonitor state changes
         heartbeatMonitor.objectWillChange.sink { [weak self] in
@@ -132,6 +136,7 @@ public class SessionCoordinator: ObservableObject {
                 self.appSettings.voxSensitivity = packet.voxSensitivity
                 self.appSettings.voxHoldTime = packet.voxHoldTime
                 self.appSettings.isAutoNightModeEnabled = packet.isAutoNightModeEnabled
+                self.appSettings.displayOffDelay = packet.displayOffDelay
                 self.appSettings.isPinRequired = packet.isPinRequired
                 
                 // Okamžitě restartovat záznam s novými hodnotami
@@ -181,9 +186,24 @@ public class SessionCoordinator: ObservableObject {
             voxSensitivity: appSettings.voxSensitivity,
             voxHoldTime: appSettings.voxHoldTime,
             isAutoNightModeEnabled: appSettings.isAutoNightModeEnabled,
+            displayOffDelay: appSettings.displayOffDelay,
             isPinRequired: appSettings.isPinRequired
         )
         networkManager.sendSettings(packet)
+    }
+    
+    public func applyDeviceNameChange() {
+        // Don't call objectWillChange here — it rebuilds the settings screen and hides the text caret.
+        deviceNameRefreshTask?.cancel()
+        deviceNameRefreshTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            guard role == .child else { return }
+            networkManager.refreshAdvertisedDeviceName()
+            if isConnected {
+                networkManager.sendDeviceInfo()
+            }
+        }
     }
     
     public func startAsChild() {
@@ -207,7 +227,6 @@ public class SessionCoordinator: ObservableObject {
     
     public func connectToDevice(_ device: DiscoveredDevice) {
         appSettings.lastConnectedPIN = device.id
-        audioManager.isAudioBoostEnabled = appSettings.isAudioBoostEnabled
         networkManager.connectToDevice(device)
         audioManager.preparePlayback()
         heartbeatMonitor.start(role: .parent, alarmDelay: appSettings.disconnectAlarmDelay)

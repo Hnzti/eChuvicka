@@ -5,6 +5,7 @@ import UIKit
 
 struct ParentView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
+    @EnvironmentObject var settings: AppSettings
     @State private var isPressingPTT = false
     
     // For PIN entry
@@ -31,7 +32,7 @@ struct ParentView: View {
                 
                 Spacer()
                 
-                Text("Rodičovská jednotka")
+                Text(resolvedDeviceName)
                     .font(.system(.headline, design: .rounded, weight: .bold))
                 
                 Spacer()
@@ -44,9 +45,6 @@ struct ParentView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.teal)
-                .navigationDestination(isPresented: $showingSettings) {
-                    SettingsView()
-                }
             }
             .layoutPriority(1)
             .padding()
@@ -79,10 +77,28 @@ struct ParentView: View {
                         
                         Spacer()
                         
-                        Text("Zadejte PIN z dětské jednotky")
+                        Text("Zadejte PIN pro \(device.displayName)")
                             .font(.system(.title3, design: .rounded, weight: .bold))
                         
                         PINEntryView(pin: $pin)
+                            .onChange(of: pin) { _, newPin in
+                                if newPin.count < 4 {
+                                    showPinError = false
+                                    return
+                                }
+                                if newPin == device.id {
+                                    showPinError = false
+                                    coordinator.connectToDevice(device)
+                                } else {
+                                    showPinError = true
+                                    #if os(iOS)
+                                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                                    #endif
+                                    DispatchQueue.main.async {
+                                        pin = ""
+                                    }
+                                }
+                            }
                         
                         if showPinError {
                             Text("Nesprávný PIN, zkuste to znovu.")
@@ -90,28 +106,6 @@ struct ParentView: View {
                                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                                 .transition(.opacity)
                         }
-                        
-                        Button(action: {
-                            if pin == device.id {
-                                showPinError = false
-                                coordinator.connectToDevice(device)
-                            } else {
-                                showPinError = true
-                                pin = ""
-                            }
-                        }) {
-                            Text("Připojit")
-                                .font(.system(.title3, design: .rounded, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: 300)
-                                .padding(.vertical, 16)
-                                .background(
-                                    pin.count == 4 ? Color.teal : Color.gray.opacity(0.5)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
-                        .disabled(pin.count < 4)
-                        .buttonStyle(.plain)
                         
                         Spacer()
                     }
@@ -153,7 +147,7 @@ struct ParentView: View {
                                         }) {
                                             HStack {
                                                 VStack(alignment: .leading, spacing: 4) {
-                                                    Text("Dětská jednotka")
+                                                    Text(device.displayName)
                                                         .font(.system(.headline, design: .rounded, weight: .bold))
                                                     Text(device.requiresPin ? "Klepněte pro zadání PINu" : "Klepněte pro přímé připojení")
                                                         .font(.system(.subheadline, design: .rounded))
@@ -191,7 +185,8 @@ struct ParentView: View {
                         .padding()
                         .background(Color.red)
                         .transition(.move(edge: .top).combined(with: .opacity))
-                    } else if coordinator.appSettings.isLowBatteryAlertEnabled && coordinator.peerBatteryLevel <= 0.2 {
+                    } else if coordinator.appSettings.isLowBatteryAlertEnabled
+                                && coordinator.peerBatteryLevel <= Float(coordinator.appSettings.lowBatteryThreshold) {
                         HStack {
                             Image(systemName: "battery.25")
                             Text("Dítě má vybitou baterii!")
@@ -209,6 +204,12 @@ struct ParentView: View {
                         latencyMs: coordinator.latencyMs
                     )
                     .padding(.top, 20)
+                    
+                    if let deviceName = coordinator.connectedDeviceName {
+                        Text(deviceName)
+                            .font(.system(.title3, design: .rounded, weight: .semibold))
+                            .foregroundColor(.secondary)
+                    }
                     
                     Spacer(minLength: 0)
                     
@@ -283,6 +284,31 @@ struct ParentView: View {
         .animation(.default, value: coordinator.isConnected)
         .animation(.default, value: coordinator.isConnectionAlive)
         .animation(.default, value: selectedDevice)
+        .sheet(isPresented: $showingSettings) {
+            NavigationStack {
+                SettingsView(
+                    role: .parent,
+                    onCommitDeviceName: { coordinator.applyDeviceNameChange() }
+                )
+                .environmentObject(settings)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Hotovo") {
+                            showingSettings = false
+                        }
+                    }
+                }
+            }
+            #if os(macOS)
+            .frame(minWidth: 420, minHeight: 520)
+            #endif
+        }
+        .onReceive(coordinator.audioManager.$audioLevel) { _ in }
+    }
+    
+    private var resolvedDeviceName: String {
+        let custom = settings.deviceName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return custom.isEmpty ? DeviceName.defaultName(for: .parent) : custom
     }
     
     private func batteryIcon(for level: Float) -> String {

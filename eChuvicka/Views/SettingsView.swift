@@ -2,11 +2,60 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var settings: AppSettings
+    
+    let role: AppRole
+    let onCommitDeviceName: () -> Void
+    
+    @State private var deviceNameDraft = ""
+    @FocusState private var isDeviceNameFocused: Bool
+    
+    init(role: AppRole = .none, onCommitDeviceName: @escaping () -> Void = {}) {
+        self.role = role
+        self.onCommitDeviceName = onCommitDeviceName
+    }
 
     var body: some View {
         Form {
             Section {
-                Toggle("Detekce zvuku (VOX)", isOn: $settings.isVOXEnabled)
+                TextField("Název zařízení", text: $deviceNameDraft)
+                    .focused($isDeviceNameFocused)
+                    .submitLabel(.done)
+                    #if os(iOS)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+                    #endif
+                    .onSubmit {
+                        commitDeviceName()
+                        isDeviceNameFocused = false
+                    }
+                
+                Toggle("Automaticky vypnout displej", isOn: $settings.isAutoNightModeEnabled)
+                
+                if settings.isAutoNightModeEnabled {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Vypnout po")
+                            Spacer()
+                            Text("\(Int(settings.displayOffDelay)) s")
+                                .foregroundColor(.secondary)
+                        }
+                        Slider(value: $settings.displayOffDelay, in: 5...30, step: 1)
+                        
+                        Text("Displej dětské jednotky zčerná, ale nezamkne se. Klepnutím se znovu rozsvítí.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            } header: {
+                Text("Displej")
+            }
+            
+            Section {
+                Toggle("VOX", isOn: $settings.isVOXEnabled)
+                
+                Text("VOX spustí přenos zvuku jen při detekci hluku. Když je vypnutý, dětská jednotka vysílá nepřetržitě.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 
                 if settings.isVOXEnabled {
                     VStack(alignment: .leading, spacing: 8) {
@@ -18,20 +67,15 @@ struct SettingsView: View {
                         }
                         Slider(value: $settings.voxSensitivity, in: 0...1)
                         
-                        Picker("Doba vysílání po detekci", selection: $settings.voxHoldTime) {
-                            Text("5 sekund").tag(5.0)
-                            Text("15 sekund").tag(15.0)
-                            Text("30 sekund").tag(30.0)
-                            Text("1 minuta").tag(60.0)
+                        HStack {
+                            Text("Doba vysílání po detekci")
+                            Spacer()
+                            Text("\(Int(settings.voxHoldTime)) s")
+                                .foregroundColor(.secondary)
                         }
+                        Slider(value: $settings.voxHoldTime, in: 5...30, step: 1)
                     }
                 }
-                
-                Toggle("Zesílit příjem zvuku (Audio Boost 2x)", isOn: $settings.isAudioBoostEnabled)
-                
-                Text("Funkce VOX automaticky aktivuje přenos zvuku pouze při detekci hluku, což výrazně šetří baterii. Audio Boost softwarově zesílí tichý zvuk z dětské jednotky.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             } header: {
                 Text("Přenos zvuku")
             }
@@ -40,53 +84,63 @@ struct SettingsView: View {
                 Toggle("Alarm při ztrátě spojení", isOn: $settings.isDisconnectAlarmEnabled)
                 
                 if settings.isDisconnectAlarmEnabled {
-                    Picker("Prodleva alarmu", selection: $settings.disconnectAlarmDelay) {
-                        Text("Okamžitě (6 sekund)").tag(6.0)
-                        Text("15 sekund").tag(15.0)
-                        Text("30 sekund").tag(30.0)
-                        Text("1 minuta").tag(60.0)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Prodleva alarmu")
+                            Spacer()
+                            Text("\(Int(settings.disconnectAlarmDelay)) s")
+                                .foregroundColor(.secondary)
+                        }
+                        Slider(value: $settings.disconnectAlarmDelay, in: 5...30, step: 1)
                     }
                 }
                 
-                Toggle("Varování při nízké baterii dítěte (< 20 %)", isOn: $settings.isLowBatteryAlertEnabled)
+                Toggle("Varování při nízké baterii dítěte", isOn: $settings.isLowBatteryAlertEnabled)
                 
-                Toggle("Automatické znovupřipojení", isOn: $settings.isAutoReconnectEnabled)
+                if settings.isLowBatteryAlertEnabled {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Práh baterie")
+                            Spacer()
+                            Text("\(Int(settings.lowBatteryThreshold * 100)) %")
+                                .foregroundColor(.secondary)
+                        }
+                        Slider(value: $settings.lowBatteryThreshold, in: 0.05...0.30, step: 0.05)
+                    }
+                }
                 
-                Text("Prodleva alarmu zabraňuje falešným poplachům při krátkých výpadcích Wi-Fi. Automatické znovupřipojení se pokusí samo navázat spojení bez nutnosti psát PIN.")
+                Toggle("Obnovit spojení automaticky", isOn: $settings.isAutoReconnectEnabled)
+                
+                Text("Po krátkém výpadku Wi‑Fi se rodičovská jednotka sama znovu připojí k poslední dětské jednotce, bez opětovného zadání PINu.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("Upozornění a spojení (Rodič)")
+                Text("Upozornění a spojení")
             }
             
+            if role == .child {
             Section {
                 Toggle("Vyžadovat párovací PIN", isOn: $settings.isPinRequired)
                 
-                Toggle("Automatický noční režim (zčernání displeje)", isOn: $settings.isAutoNightModeEnabled)
-                
-                Text("Pokud zrušíte vyžadování PINu, k chůvičce se bude moci na stejné síti připojit kdokoliv. Pokud je funkce aktivní, 10 sekund po úspěšném připojení se obrazovka dětské jednotky zcela zhasne.")
+                Text("Bez PINu se na stejné síti může k dětské jednotce připojit kdokoliv s aplikací eChůvička.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("Displej a zabezpečení (Dítě)")
+                Text("Zabezpečení")
+                }
             }
             
             Section {
                 HStack {
                     Text("Verze aplikace")
                     Spacer()
-                    Text("1.0.0")
+                    Text("1.1.0")
                         .foregroundColor(.secondary)
                 }
                 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("eChůvička")
-                        .font(.headline)
-                    Text("Spolehlivá multiplatformní chůvička pro vaše zařízení.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.vertical, 4)
+                Text("© \(Calendar.current.component(.year, from: Date())) eChůvička")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             } header: {
                 Text("O aplikaci")
             }
@@ -95,9 +149,32 @@ struct SettingsView: View {
         .navigationTitle("Nastavení")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Hotovo") {
+                    commitDeviceName()
+                    isDeviceNameFocused = false
+                }
+                .fontWeight(.semibold)
+            }
+        }
         #endif
-        #if os(macOS)
-        .frame(minWidth: 450, minHeight: 600)
-        #endif
+        .onAppear {
+            deviceNameDraft = settings.deviceName
+        }
+        .onDisappear {
+            commitDeviceName()
+        }
+    }
+    
+    private func commitDeviceName() {
+        let trimmed = deviceNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        if deviceNameDraft != trimmed {
+            deviceNameDraft = trimmed
+        }
+        guard trimmed != settings.deviceName else { return }
+        settings.deviceName = trimmed
+        onCommitDeviceName()
     }
 }

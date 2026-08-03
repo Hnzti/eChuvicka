@@ -21,6 +21,7 @@
 		B10000000000000000000C /* AudioLevelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000C /* AudioLevelView.swift */; };
 		B10000000000000000000D /* ConnectionStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000D /* ConnectionStatusBadge.swift */; };
 		B10000000000000000000E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000E /* Assets.xcassets */; };
+		B10000000000000000000F /* DeviceName.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000000000000000011 /* DeviceName.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +41,7 @@
 		A10000000000000000000E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A100000000000000000010 /* eChuvicka.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = eChuvicka.entitlements; sourceTree = "<group>"; };
+		A100000000000000000011 /* DeviceName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceName.swift; sourceTree = "<group>"; };
 		E100000000000000000002 /* eChuvicka.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = eChuvicka.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -81,6 +83,7 @@
 			children = (
 				A100000000000000000002 /* AppRole.swift */,
 				A100000000000000000003 /* AppSettings.swift */,
+				A100000000000000000011 /* DeviceName.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -208,6 +211,7 @@
 				B10000000000000000000B /* SettingsView.swift in Sources */,
 				B10000000000000000000C /* AudioLevelView.swift in Sources */,
 				B10000000000000000000D /* ConnectionStatusBadge.swift in Sources */,
+				B10000000000000000000F /* DeviceName.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -357,7 +361,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hnzti.eChuvicka;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -391,7 +395,7 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hnzti.eChuvicka;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

@@ -30,7 +30,7 @@ struct RoleSelectionView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                NavigationLink(destination: SettingsView()) {
+                NavigationLink(destination: SettingsView(role: .none)) {
                     Label("Nastavení", systemImage: "gearshape")
                 }
             }

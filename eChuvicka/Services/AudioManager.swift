@@ -174,8 +174,6 @@ public class AudioManager: ObservableObject {
         }
     }
     
-    public var isAudioBoostEnabled: Bool = false
-    
     public func playReceivedAudio(_ data: Data) {
         // Ensure playback engine is ready
         if playbackEngine == nil {
@@ -197,15 +195,7 @@ public class AudioManager: ObservableObject {
         data.withUnsafeBytes { rawBufferPointer in
             if let floats = rawBufferPointer.bindMemory(to: Float.self).baseAddress,
                let bufferData = buffer.floatChannelData?[0] {
-                
-                if isAudioBoostEnabled {
-                    // Multiply samples by 2.0 (boost volume)
-                    for i in 0..<Int(frameCount) {
-                        bufferData[i] = floats[i] * 2.0
-                    }
-                } else {
                     bufferData.update(from: floats, count: Int(frameCount))
-                }
             }
         }
         

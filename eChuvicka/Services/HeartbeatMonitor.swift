@@ -23,7 +23,7 @@ public class HeartbeatMonitor: ObservableObject {
     
     public var onSendHeartbeat: (() -> Void)?
     
-    private var disconnectAlarmDelay: Double = 6.0
+    private var disconnectAlarmDelay: Double = 10.0
     
     public init() {}
     
