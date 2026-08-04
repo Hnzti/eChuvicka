@@ -34,26 +34,8 @@ struct SettingsView: View {
                         commitDeviceName()
                         isDeviceNameFocused = false
                     }
-                
-                Toggle("Automaticky vypnout displej", isOn: $settings.isAutoNightModeEnabled)
-                
-                if settings.isAutoNightModeEnabled {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Vypnout po")
-                            Spacer()
-                            Text("\(Int(settings.displayOffDelay)) s")
-                                .foregroundColor(.secondary)
-                        }
-                        Slider(value: $settings.displayOffDelay, in: 5...30, step: 1)
-                        
-                        Text("Displej dětské jednotky zčerná, ale nezamkne se. Klepnutím se znovu rozsvítí.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
             } header: {
-                Text("Displej")
+                Text("Zařízení")
             }
             
             Section {
@@ -143,7 +125,7 @@ struct SettingsView: View {
                 HStack {
                     Text("Verze aplikace")
                     Spacer()
-                    Text("1.1.0")
+                    Text("1.1.3")
                         .foregroundColor(.secondary)
                 }
                 

@@ -5,6 +5,8 @@ import AVFoundation
 public class AudioManager: ObservableObject {
     @Published public var audioLevel: Float = 0.0
     @Published public var isTransmitting: Bool = false
+    /// Parent is currently receiving audible packets from the child.
+    @Published public var isReceiving: Bool = false
     
     private var captureEngine: AVAudioEngine?
     private var playbackEngine: AVAudioEngine?
@@ -17,6 +19,7 @@ public class AudioManager: ObservableObject {
     private var lastVOXTriggerDate: Date?
     private var onAudioCaptured: ((Data) -> Void)?
     private var audioConverter: AVAudioConverter?
+    private var receivingClearTask: Task<Void, Never>?
     
     // Fixed sample rate for network transmission (both sides must agree)
     private let networkSampleRate: Double = 16000
@@ -192,20 +195,51 @@ public class AudioManager: ObservableObject {
         guard let buffer = AVAudioPCMBuffer(pcmFormat: networkFormat, frameCapacity: frameCount) else { return }
         buffer.frameLength = frameCount
         
+        var rms: Float = 0.0
         data.withUnsafeBytes { rawBufferPointer in
             if let floats = rawBufferPointer.bindMemory(to: Float.self).baseAddress,
                let bufferData = buffer.floatChannelData?[0] {
-                    bufferData.update(from: floats, count: Int(frameCount))
+                bufferData.update(from: floats, count: Int(frameCount))
+                let count = Int(frameCount)
+                for i in 0..<count {
+                    let sample = floats[i]
+                    rms += sample * sample
+                }
+                if count > 0 {
+                    rms = sqrt(rms / Float(count))
+                }
             }
         }
         
         playerNode.scheduleBuffer(buffer, completionHandler: nil)
+        
+        let receivedLevel = min(max(rms * 2.0, 0.0), 1.0)
+        // While PTT capture is active, keep showing the parent's mic level.
+        if !isCaptureActive {
+            audioLevel = receivedLevel
+        }
+        isReceiving = true
+        receivingClearTask?.cancel()
+        receivingClearTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled else { return }
+            isReceiving = false
+            if !isCaptureActive {
+                audioLevel = 0.0
+            }
+        }
     }
     
     public func stopPlayback() {
+        receivingClearTask?.cancel()
+        receivingClearTask = nil
+        isReceiving = false
         playerNode.stop()
         playbackEngine?.stop()
         playbackEngine = nil
+        if !isCaptureActive {
+            audioLevel = 0.0
+        }
     }
     
     // MARK: - Sample Rate Conversion

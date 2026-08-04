@@ -20,9 +20,6 @@ public class AppSettings: ObservableObject {
     @AppStorage("lowBatteryThreshold") public var lowBatteryThreshold: Double = 0.20
     @AppStorage("isAutoReconnectEnabled") public var isAutoReconnectEnabled: Bool = true
     
-    @AppStorage("isAutoNightModeEnabled") public var isAutoNightModeEnabled: Bool = true
-    /// Seconds before the child display turns off while connected (5…30).
-    @AppStorage("displayOffDelay") public var displayOffDelay: Double = 10.0
     @AppStorage("isPinRequired") public var isPinRequired: Bool = true
     @AppStorage("deviceName") public var deviceName: String = ""
     @AppStorage("lastConnectedPIN") public var lastConnectedPIN: String = ""

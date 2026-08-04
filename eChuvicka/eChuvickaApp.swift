@@ -1,8 +1,14 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 @main
 struct eChuvickaApp: App {
     @StateObject private var coordinator = SessionCoordinator()
+    #if os(iOS)
+    @Environment(\.scenePhase) private var scenePhase
+    #endif
     
     var body: some Scene {
         WindowGroup {
@@ -12,9 +18,28 @@ struct eChuvickaApp: App {
                 #if os(macOS)
                 .frame(minWidth: 400, minHeight: 600)
                 #endif
+                #if os(iOS)
+                .onAppear {
+                    ScreenSleepPolicy.allowSystemAutoLock()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active {
+                        ScreenSleepPolicy.allowSystemAutoLock()
+                    }
+                }
+                #endif
         }
     }
 }
+
+#if os(iOS)
+enum ScreenSleepPolicy {
+    /// App must never block Auto-Lock; locking is entirely up to iOS.
+    static func allowSystemAutoLock() {
+        UIApplication.shared.isIdleTimerDisabled = false
+    }
+}
+#endif
 
 struct ContentView: View {
     @EnvironmentObject var coordinator: SessionCoordinator

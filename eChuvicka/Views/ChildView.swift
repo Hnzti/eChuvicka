@@ -1,12 +1,13 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct ChildView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
     @EnvironmentObject var settings: AppSettings
     @Environment(\.colorScheme) var colorScheme
-    @State private var isNightModeActive = false
     @State private var showingSettings = false
-    @State private var displayOffTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -14,7 +15,6 @@ struct ChildView: View {
                 // Header
                 HStack {
                     Button(action: {
-                        cancelDisplayOff()
                         coordinator.stop()
                         coordinator.role = .none
                     }) {
@@ -129,26 +129,22 @@ struct ChildView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
+                        
+                        #if os(iOS)
+                        Text("Pro zhasnutí displeje zamkněte iPhone bočním tlačítkem. Mikrofon a přenos běží dál na pozadí — usínání řídí systém.")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 12)
+                            .padding(.top, 8)
+                        #endif
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 40)
                 }
             }
-            
-            // Display off — black screen, not locked; tap wakes.
-            if isNightModeActive {
-                Color.black
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        wakeDisplay()
-                    }
-            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        #if os(iOS)
-        .statusBarHidden(isNightModeActive)
-        #endif
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
                 SettingsView(
@@ -171,65 +167,15 @@ struct ChildView: View {
         }
         .onReceive(coordinator.audioManager.$audioLevel) { _ in }
         .onReceive(coordinator.audioManager.$isTransmitting) { _ in }
-        .onChange(of: coordinator.isConnected) { _, isConnected in
-            if isConnected {
-                scheduleDisplayOffIfNeeded()
-            } else {
-                cancelDisplayOff()
-                        withAnimation {
-                    isNightModeActive = false
-                        }
-                    }
-                }
-        .onChange(of: settings.isAutoNightModeEnabled) { _, enabled in
-            if enabled, coordinator.isConnected {
-                scheduleDisplayOffIfNeeded()
-            } else {
-                cancelDisplayOff()
-                withAnimation {
-                    isNightModeActive = false
-                }
-            }
+        #if os(iOS)
+        .onAppear {
+            ScreenSleepPolicy.allowSystemAutoLock()
         }
-        .onChange(of: settings.displayOffDelay) { _, _ in
-            if coordinator.isConnected, settings.isAutoNightModeEnabled, !isNightModeActive {
-                scheduleDisplayOffIfNeeded()
-            }
-        }
-        .onDisappear {
-            cancelDisplayOff()
-        }
+        #endif
     }
     
     private var resolvedDeviceName: String {
         let custom = settings.deviceName.trimmingCharacters(in: .whitespacesAndNewlines)
         return custom.isEmpty ? DeviceName.defaultName(for: .child) : custom
-    }
-    
-    private func scheduleDisplayOffIfNeeded() {
-        cancelDisplayOff()
-        guard settings.isAutoNightModeEnabled, coordinator.isConnected else { return }
-        
-        let delay = max(5, min(30, settings.displayOffDelay))
-        displayOffTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            guard coordinator.isConnected, settings.isAutoNightModeEnabled else { return }
-            withAnimation {
-                isNightModeActive = true
-            }
-        }
-    }
-    
-    private func wakeDisplay() {
-        withAnimation {
-            isNightModeActive = false
-        }
-        scheduleDisplayOffIfNeeded()
-    }
-    
-    private func cancelDisplayOff() {
-        displayOffTask?.cancel()
-        displayOffTask = nil
     }
 }

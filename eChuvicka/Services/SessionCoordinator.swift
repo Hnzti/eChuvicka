@@ -135,8 +135,6 @@ public class SessionCoordinator: ObservableObject {
                 self.appSettings.isVOXEnabled = packet.isVOXEnabled
                 self.appSettings.voxSensitivity = packet.voxSensitivity
                 self.appSettings.voxHoldTime = packet.voxHoldTime
-                self.appSettings.isAutoNightModeEnabled = packet.isAutoNightModeEnabled
-                self.appSettings.displayOffDelay = packet.displayOffDelay
                 self.appSettings.isPinRequired = packet.isPinRequired
                 
                 // Apply PIN/OPEN to the live Bonjour advertisement immediately.
@@ -151,8 +149,6 @@ public class SessionCoordinator: ObservableObject {
                     self?.networkManager.sendAudioData(data)
                     self?.heartbeatMonitor.dataReceived()
                 }
-                
-                // Dětská UI obrazovka zareaguje na isAutoNightModeEnabled sama přes @AppStorage/EnvironmentObject
             }
         }
         
@@ -188,8 +184,6 @@ public class SessionCoordinator: ObservableObject {
             isVOXEnabled: appSettings.isVOXEnabled,
             voxSensitivity: appSettings.voxSensitivity,
             voxHoldTime: appSettings.voxHoldTime,
-            isAutoNightModeEnabled: appSettings.isAutoNightModeEnabled,
-            displayOffDelay: appSettings.displayOffDelay,
             isPinRequired: appSettings.isPinRequired
         )
         networkManager.sendSettings(packet)

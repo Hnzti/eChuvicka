@@ -39,23 +39,17 @@ public struct SettingsPacket: Codable, Sendable {
     public let isVOXEnabled: Bool
     public let voxSensitivity: Double
     public let voxHoldTime: Double
-    public let isAutoNightModeEnabled: Bool
-    public let displayOffDelay: Double
     public let isPinRequired: Bool
     
     public init(
         isVOXEnabled: Bool,
         voxSensitivity: Double,
         voxHoldTime: Double,
-        isAutoNightModeEnabled: Bool,
-        displayOffDelay: Double,
         isPinRequired: Bool
     ) {
         self.isVOXEnabled = isVOXEnabled
         self.voxSensitivity = voxSensitivity
         self.voxHoldTime = voxHoldTime
-        self.isAutoNightModeEnabled = isAutoNightModeEnabled
-        self.displayOffDelay = displayOffDelay
         self.isPinRequired = isPinRequired
     }
 }
@@ -274,7 +268,7 @@ public class NetworkManager: ObservableObject {
                 case .ready:
                     print("[Connection] Ready!")
                     self.isConnected = true
-                    self.connectionMode = .connectedRouter
+                    self.updateConnectionMode(from: newConnection.currentPath)
                     self.startReceiving()
                     self.sendDeviceInfo()
                 case .failed(let error):
@@ -292,15 +286,32 @@ public class NetworkManager: ObservableObject {
         newConnection.pathUpdateHandler = { [weak self] newPath in
             Task { @MainActor in
                 guard let self = self, self.isConnected else { return }
-                if newPath.usesInterfaceType(.wifi) {
-                    self.connectionMode = .connectedRouter
-                } else {
-                    self.connectionMode = .connectedDirect
-                }
+                self.updateConnectionMode(from: newPath)
             }
         }
         
         newConnection.start(queue: .main)
+    }
+    
+    /// AWDL / peer-to-peer shows up as `.other`. Infrastructure Wi‑Fi or Ethernet → router.
+    private func updateConnectionMode(from path: NWPath?) {
+        guard let path else {
+            connectionMode = .connectedDirect
+            return
+        }
+        
+        // Peer-to-peer (AirDrop-style AWDL) — devices next to each other, no router needed.
+        if path.usesInterfaceType(.other) {
+            connectionMode = .connectedDirect
+            return
+        }
+        
+        if path.usesInterfaceType(.wifi) || path.usesInterfaceType(.wiredEthernet) {
+            connectionMode = .connectedRouter
+            return
+        }
+        
+        connectionMode = .connectedDirect
     }
     
     private func handleDisconnect() {

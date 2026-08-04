@@ -214,16 +214,51 @@ struct ParentView: View {
                     Spacer(minLength: 0)
                     
                     // Audio Visualizer
-                    ZStack {
-                        AudioLevelView(audioLevel: coordinator.audioLevel, isCapturing: coordinator.isConnectionAlive, isTransmitting: coordinator.audioLevel > 0.05)
-                            .frame(minHeight: 100, idealHeight: 250, maxHeight: 300)
-                        
-                        if coordinator.audioLevel <= 0.05 {
-                            Image(systemName: "speaker.wave.2")
-                                .font(.system(size: 50))
-                                .foregroundColor(.secondary.opacity(0.5))
+                    AudioLevelView(
+                        audioLevel: coordinator.audioLevel,
+                        isCapturing: coordinator.isConnectionAlive,
+                        isTransmitting: coordinator.audioManager.isReceiving || isPressingPTT
+                    )
+                    .frame(minHeight: 100, idealHeight: 250, maxHeight: 300)
+                    
+                    // Status — mirror of child, from the parent's perspective
+                    VStack(spacing: 8) {
+                        if coordinator.isConnectionAlive {
+                            if isPressingPTT {
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(Color.teal)
+                                        .frame(width: 12, height: 12)
+                                    Text("MLUVÍTE K DÍTĚTI")
+                                        .font(.system(.headline, design: .rounded, weight: .bold))
+                                        .foregroundColor(.teal)
+                                }
+                            } else if coordinator.audioManager.isReceiving {
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(Color.orange)
+                                        .frame(width: 12, height: 12)
+                                    Text("PŘIJÍMÁ ZVUK OD DÍTĚTE!")
+                                        .font(.system(.headline, design: .rounded, weight: .bold))
+                                        .foregroundColor(.orange)
+                                }
+                            } else {
+                                HStack(spacing: 8) {
+                                    Circle()
+                                        .fill(Color.green)
+                                        .frame(width: 10, height: 10)
+                                    Text("NASLOUCHÁ")
+                                        .font(.system(.headline, design: .rounded, weight: .bold))
+                                        .foregroundColor(.green)
+                                }
+                            }
+                        } else if coordinator.isConnected {
+                            Text("Obnovování spojení...")
+                                .font(.system(.body, design: .rounded))
+                                .foregroundColor(.secondary)
                         }
                     }
+                    .padding(.top, 8)
                     
                     // Child Battery
                     HStack(spacing: 8) {
@@ -304,19 +339,18 @@ struct ParentView: View {
             #endif
         }
         .onReceive(coordinator.audioManager.$audioLevel) { _ in }
+        .onReceive(coordinator.audioManager.$isReceiving) { _ in }
         .onChange(of: coordinator.discoveredDevices) { _, devices in
             guard let selected = selectedDevice else { return }
             if let updated = devices.first(where: { $0.id == selected.id }) {
                 selectedDevice = updated
-                // Child turned PIN off — leave the PIN screen and connect directly.
+                // Child turned PIN off — leave PIN screen, return to list (no auto-connect).
                 if !updated.requiresPin {
                     pin = ""
                     showPinError = false
                     selectedDevice = nil
-                    coordinator.connectToDevice(updated)
                 }
             } else if !devices.contains(where: { $0.id == selected.id }) {
-                // Advertisement disappeared while switching PIN/OPEN.
                 selectedDevice = nil
                 pin = ""
                 showPinError = false
