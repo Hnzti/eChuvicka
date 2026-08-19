@@ -23,7 +23,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
-                TextField("Název zařízení", text: $deviceNameDraft)
+                TextField(L10n.Settings.deviceName, text: $deviceNameDraft)
                     .focused($isDeviceNameFocused)
                     .submitLabel(.done)
                     #if os(iOS)
@@ -35,20 +35,20 @@ struct SettingsView: View {
                         isDeviceNameFocused = false
                     }
             } header: {
-                Text("Zařízení")
+                Text(L10n.Settings.device)
             }
             
             Section {
-                Toggle("VOX", isOn: $settings.isVOXEnabled)
+                Toggle(L10n.Settings.vox, isOn: $settings.isVOXEnabled)
                 
-                Text("VOX spustí přenos zvuku jen při detekci hluku. Když je vypnutý, dětská jednotka vysílá nepřetržitě.")
+                Text(L10n.Settings.voxHelp)
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
                 if settings.isVOXEnabled {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Citlivost")
+                            Text(L10n.Settings.sensitivity)
                             Spacer()
                             Text("\(Int(settings.voxSensitivity * 100)) %")
                                 .foregroundColor(.secondary)
@@ -56,7 +56,7 @@ struct SettingsView: View {
                         Slider(value: $settings.voxSensitivity, in: 0...1)
                         
                         HStack {
-                            Text("Doba vysílání po detekci")
+                            Text(L10n.Settings.holdAfterDetection)
                             Spacer()
                             Text("\(Int(settings.voxHoldTime)) s")
                                 .foregroundColor(.secondary)
@@ -65,85 +65,94 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("Přenos zvuku")
+                Text(L10n.Settings.audio)
             }
             
             Section {
-                Toggle("Alarm při ztrátě spojení", isOn: $settings.isDisconnectAlarmEnabled)
+                Toggle(L10n.Settings.disconnectAlarm, isOn: $settings.isDisconnectAlarmEnabled)
                 
                 if settings.isDisconnectAlarmEnabled {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Prodleva alarmu")
+                            Text(L10n.Settings.alarmDelay)
                             Spacer()
                             Text("\(Int(settings.disconnectAlarmDelay)) s")
                                 .foregroundColor(.secondary)
                         }
                         Slider(value: $settings.disconnectAlarmDelay, in: 5...30, step: 1)
+                        
+                        Text(L10n.Settings.disconnectAlarmHelp)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
-                Toggle("Varování při nízké baterii dítěte", isOn: $settings.isLowBatteryAlertEnabled)
+                Toggle(L10n.Settings.lowBatteryAlert, isOn: $settings.isLowBatteryAlertEnabled)
                 
                 if settings.isLowBatteryAlertEnabled {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Práh baterie")
+                            Text(L10n.Settings.batteryThreshold)
                             Spacer()
                             Text("\(Int(settings.lowBatteryThreshold * 100)) %")
                                 .foregroundColor(.secondary)
                         }
                         Slider(value: $settings.lowBatteryThreshold, in: 0.05...0.30, step: 0.05)
+                        
+                        Text(L10n.Settings.lowBatteryHelp)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
-                Toggle("Obnovit spojení automaticky", isOn: $settings.isAutoReconnectEnabled)
+                Toggle(L10n.Settings.autoReconnect, isOn: $settings.isAutoReconnectEnabled)
                 
-                Text("Po krátkém výpadku Wi‑Fi se rodičovská jednotka sama znovu připojí k poslední dětské jednotce, bez opětovného zadání PINu.")
+                Text(L10n.Settings.autoReconnectHelp)
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("Upozornění a spojení")
+                Text(L10n.Settings.alerts)
             }
             
             if role == .child {
                 Section {
-                    Toggle("Vyžadovat párovací PIN", isOn: $settings.isPinRequired)
+                    Toggle(L10n.Settings.requirePin, isOn: $settings.isPinRequired)
                         .onChange(of: settings.isPinRequired) { _, _ in
+                            settings.synchronize()
                             onPinRequirementChange()
                         }
                     
-                    Text("Bez PINu se na stejné síti může k dětské jednotce připojit kdokoliv s aplikací eChůvička. Změna se projeví hned ve vysílání dětské jednotky.")
+                    Text(L10n.Settings.pinHelp(AppBrand.displayName))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 } header: {
-                    Text("Zabezpečení")
+                    Text(L10n.Settings.security)
                 }
             }
             
             Section {
                 HStack {
-                    Text("Verze aplikace")
+                    Text(L10n.Settings.version)
                     Spacer()
-                    Text("1.1.3")
+                    Text(appVersionLabel)
                         .foregroundColor(.secondary)
                 }
                 
-                Text("© \(Calendar.current.component(.year, from: Date())) eChůvička")
+                Text("© \(Calendar.current.component(.year, from: Date())) \(AppBrand.displayName)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("O aplikaci")
+                Text(L10n.Settings.about)
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Nastavení")
+        .navigationTitle(L10n.Settings.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Hotovo") {
+                Button(L10n.Common.done) {
                     commitDeviceName()
                     isDeviceNameFocused = false
                 }
@@ -156,7 +165,14 @@ struct SettingsView: View {
         }
         .onDisappear {
             commitDeviceName()
+            settings.synchronize()
         }
+    }
+    
+    private var appVersionLabel: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+        return "\(version) (\(build))"
     }
     
     private func commitDeviceName() {

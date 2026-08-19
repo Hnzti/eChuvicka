@@ -12,7 +12,6 @@ struct ParentView: View {
     @State private var selectedDevice: DiscoveredDevice? = nil
     @State private var pin: String = ""
     @State private var showPinError = false
-    @State private var showingSettings = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -23,7 +22,7 @@ struct ParentView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                        Text("Zpět")
+                        Text(L10n.Common.back)
                     }
                     .font(.system(.body, design: .rounded, weight: .medium))
                 }
@@ -37,9 +36,12 @@ struct ParentView: View {
                 
                 Spacer()
                 
-                Button(action: {
-                    showingSettings = true
-                }) {
+                NavigationLink {
+                    SettingsView(
+                        role: .parent,
+                        onCommitDeviceName: { coordinator.applyDeviceNameChange() }
+                    )
+                } label: {
                     Image(systemName: "gearshape.fill")
                         .font(.system(.body, weight: .bold))
                 }
@@ -66,7 +68,7 @@ struct ParentView: View {
                             }) {
                                 HStack(spacing: 4) {
                                     Image(systemName: "chevron.left")
-                                    Text("Zpět na seznam")
+                                    Text(L10n.Parent.backToList)
                                 }
                             }
                             .buttonStyle(.plain)
@@ -77,7 +79,7 @@ struct ParentView: View {
                         
                         Spacer()
                         
-                        Text("Zadejte PIN pro \(device.displayName)")
+                        Text(L10n.Parent.enterPin(device.displayName))
                             .font(.system(.title3, design: .rounded, weight: .bold))
                         
                         PINEntryView(pin: $pin)
@@ -86,9 +88,11 @@ struct ParentView: View {
                                     showPinError = false
                                     return
                                 }
-                                if newPin == device.id {
+                                if newPin == device.pairingPIN {
                                     showPinError = false
-                                    coordinator.connectToDevice(device)
+                                    coordinator.connectToDevice(device, authPIN: newPin)
+                                    selectedDevice = nil
+                                    pin = ""
                                 } else {
                                     showPinError = true
                                     #if os(iOS)
@@ -101,10 +105,16 @@ struct ParentView: View {
                             }
                         
                         if showPinError {
-                            Text("Nesprávný PIN, zkuste to znovu.")
+                            Text(L10n.Parent.wrongPin)
                                 .foregroundColor(.red)
                                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                                 .transition(.opacity)
+                        }
+                        
+                        if let authError = coordinator.lastAuthError {
+                            Text(authError)
+                                .foregroundColor(.red)
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
                         }
                         
                         Spacer()
@@ -115,19 +125,37 @@ struct ParentView: View {
                     VStack(spacing: 20) {
                         Spacer().frame(height: 20)
                         
-                        Text("Vyberte dětskou jednotku")
+                        Text(L10n.Parent.selectChild)
                             .font(.system(.title3, design: .rounded, weight: .bold))
+                        
+                        if let authError = coordinator.lastAuthError {
+                            Text(authError)
+                                .foregroundColor(.red)
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                .padding(.horizontal)
+                        } else if let hint = coordinator.networkManager.reconnectHint {
+                            Text(hint)
+                                .foregroundColor(.teal)
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
                         
                         if coordinator.discoveredDevices.isEmpty {
                             VStack(spacing: 16) {
                                 ProgressView()
                                     .scaleEffect(1.5)
-                                if coordinator.appSettings.isAutoReconnectEnabled && !coordinator.appSettings.lastConnectedPIN.isEmpty {
-                                    Text("Znovupřipojování...")
+                                if coordinator.isAwaitingDropReconnect {
+                                    Text(L10n.Parent.reconnecting)
                                         .foregroundColor(.teal)
                                         .font(.headline)
+                                    Text(L10n.Parent.p2pHint)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal)
                                 } else {
-                                    Text("Vyhledávání...")
+                                    Text(L10n.Common.searching)
                                         .foregroundColor(.secondary)
                                 }
                             }
@@ -135,29 +163,55 @@ struct ParentView: View {
                         } else {
                             ScrollView {
                                 VStack(spacing: 12) {
+                                    if coordinator.isAwaitingDropReconnect {
+                                        Text(L10n.Parent.restoringLast)
+                                            .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                            .foregroundColor(.teal)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal)
+                                    }
+                                    
                                     ForEach(coordinator.discoveredDevices, id: \.id) { device in
                                         Button(action: {
-                                            if device.requiresPin {
+                                            let skipPin = !device.requiresPin || coordinator.canSkipPin(for: device)
+                                            if skipPin {
+                                                coordinator.connectToDevice(device)
+                                            } else {
                                                 selectedDevice = device
                                                 pin = ""
                                                 showPinError = false
-                                            } else {
-                                                coordinator.connectToDevice(device)
                                             }
                                         }) {
                                             HStack {
                                                 VStack(alignment: .leading, spacing: 4) {
                                                     Text(device.displayName)
                                                         .font(.system(.headline, design: .rounded, weight: .bold))
-                                                    Text(device.requiresPin ? "Klepněte pro zadání PINu" : "Klepněte pro přímé připojení")
-                                                        .font(.system(.subheadline, design: .rounded))
-                                                        .foregroundColor(.secondary)
+                                                    if coordinator.networkManager.isConnectionInProgress,
+                                                       coordinator.networkManager.connectedDeviceId == device.id {
+                                                        Text(L10n.Common.connecting)
+                                                            .font(.system(.subheadline, design: .rounded))
+                                                            .foregroundColor(.teal)
+                                                    } else if !device.requiresPin {
+                                                        Text(L10n.Parent.tapDirect)
+                                                            .font(.system(.subheadline, design: .rounded))
+                                                            .foregroundColor(.secondary)
+                                                    } else if coordinator.canSkipPin(for: device) {
+                                                        Text(L10n.Parent.trusted24h)
+                                                            .font(.system(.subheadline, design: .rounded))
+                                                            .foregroundColor(.secondary)
+                                                    } else {
+                                                        Text(L10n.Parent.tapPin)
+                                                            .font(.system(.subheadline, design: .rounded))
+                                                            .foregroundColor(.secondary)
+                                                    }
                                                 }
                                                 
                                                 Spacer()
                                                 
-                                                Image(systemName: device.requiresPin ? "lock.fill" : "lock.open.fill")
-                                                    .foregroundColor(device.requiresPin ? .teal : .green)
+                                                Image(systemName: device.requiresPin
+                                                      ? (coordinator.canSkipPin(for: device) ? "lock.open.fill" : "lock.fill")
+                                                      : "lock.open.fill")
+                                                    .foregroundColor(device.requiresPin && !coordinator.canSkipPin(for: device) ? .teal : .green)
                                             }
                                             .padding()
                                             .background(Color.secondary.opacity(0.1))
@@ -174,10 +228,10 @@ struct ParentView: View {
             } else {
                 // Connected Monitoring Screen
                 VStack(spacing: 16) {
-                    if !coordinator.isConnectionAlive {
+                    if !coordinator.isConnectionAlive && coordinator.appSettings.isDisconnectAlarmEnabled {
                         HStack {
                             Image(systemName: "exclamationmark.triangle.fill")
-                            Text("Spojení ztraceno!")
+                            Text(L10n.Parent.lostBang)
                                 .font(.system(.headline, design: .rounded, weight: .bold))
                         }
                         .foregroundColor(.white)
@@ -185,11 +239,22 @@ struct ParentView: View {
                         .padding()
                         .background(Color.red)
                         .transition(.move(edge: .top).combined(with: .opacity))
+                    } else if !coordinator.isConnectionAlive {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                            Text(L10n.Parent.lost)
+                                .font(.system(.headline, design: .rounded, weight: .bold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.orange)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                     } else if coordinator.appSettings.isLowBatteryAlertEnabled
                                 && coordinator.peerBatteryLevel <= Float(coordinator.appSettings.lowBatteryThreshold) {
                         HStack {
                             Image(systemName: "battery.25")
-                            Text("Dítě má vybitou baterii!")
+                            Text(L10n.Parent.lowBattery)
                                 .font(.system(.headline, design: .rounded, weight: .bold))
                         }
                         .foregroundColor(.white)
@@ -201,7 +266,8 @@ struct ParentView: View {
                     
                     ConnectionStatusBadge(
                         mode: coordinator.connectionMode,
-                        latencyMs: coordinator.latencyMs
+                        latencyMs: coordinator.latencyMs,
+                        wifiRSSIDbm: coordinator.wifiRSSIDbm
                     )
                     .padding(.top, 20)
                     
@@ -229,7 +295,7 @@ struct ParentView: View {
                                     Circle()
                                         .fill(Color.teal)
                                         .frame(width: 12, height: 12)
-                                    Text("MLUVÍTE K DÍTĚTI")
+                                    Text(L10n.Parent.speaking)
                                         .font(.system(.headline, design: .rounded, weight: .bold))
                                         .foregroundColor(.teal)
                                 }
@@ -238,7 +304,7 @@ struct ParentView: View {
                                     Circle()
                                         .fill(Color.orange)
                                         .frame(width: 12, height: 12)
-                                    Text("PŘIJÍMÁ ZVUK OD DÍTĚTE!")
+                                    Text(L10n.Parent.receiving)
                                         .font(.system(.headline, design: .rounded, weight: .bold))
                                         .foregroundColor(.orange)
                                 }
@@ -247,13 +313,13 @@ struct ParentView: View {
                                     Circle()
                                         .fill(Color.green)
                                         .frame(width: 10, height: 10)
-                                    Text("NASLOUCHÁ")
+                                    Text(L10n.Parent.listening)
                                         .font(.system(.headline, design: .rounded, weight: .bold))
                                         .foregroundColor(.green)
                                 }
                             }
                         } else if coordinator.isConnected {
-                            Text("Obnovování spojení...")
+                            Text(L10n.Parent.restoring)
                                 .font(.system(.body, design: .rounded))
                                 .foregroundColor(.secondary)
                         }
@@ -264,7 +330,7 @@ struct ParentView: View {
                     HStack(spacing: 8) {
                         Image(systemName: batteryIcon(for: coordinator.peerBatteryLevel))
                             .foregroundColor(batteryColor(for: coordinator.peerBatteryLevel))
-                        Text("Baterie dítěte: \(Int(coordinator.peerBatteryLevel * 100)) %")
+                        Text(L10n.Parent.babyBattery(Int(coordinator.peerBatteryLevel * 100)))
                             .font(.system(.body, design: .rounded, weight: .medium))
                     }
                     .padding(.vertical, 10)
@@ -276,7 +342,7 @@ struct ParentView: View {
                     
                     // PTT Button
                     VStack(spacing: 12) {
-                        Text("Podržte pro mluvení")
+                        Text(L10n.Parent.holdToTalk)
                             .font(.system(.subheadline, design: .rounded, weight: .medium))
                             .foregroundColor(.secondary)
                         
@@ -319,25 +385,6 @@ struct ParentView: View {
         .animation(.default, value: coordinator.isConnected)
         .animation(.default, value: coordinator.isConnectionAlive)
         .animation(.default, value: selectedDevice)
-        .sheet(isPresented: $showingSettings) {
-            NavigationStack {
-                SettingsView(
-                    role: .parent,
-                    onCommitDeviceName: { coordinator.applyDeviceNameChange() }
-                )
-                .environmentObject(settings)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Hotovo") {
-                            showingSettings = false
-                        }
-                    }
-                }
-            }
-            #if os(macOS)
-            .frame(minWidth: 420, minHeight: 520)
-            #endif
-        }
         .onReceive(coordinator.audioManager.$audioLevel) { _ in }
         .onReceive(coordinator.audioManager.$isReceiving) { _ in }
         .onChange(of: coordinator.discoveredDevices) { _, devices in

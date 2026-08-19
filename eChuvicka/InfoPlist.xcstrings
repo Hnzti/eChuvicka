@@ -1,0 +1,76 @@
+{
+  "sourceLanguage" : "cs",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Name under the Home Screen icon and in Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eChůvička"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eNany"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Short name used by the system.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eChůvička"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eNany"
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eChůvička potřebuje přístup k mikrofonu pro přenos zvuku mezi zařízeními."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eNany needs microphone access to send audio between your devices."
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eChůvička potřebuje přístup k místní síti pro komunikaci mezi dětskou a rodičovskou jednotkou."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eNany needs local network access so the baby and parent units can find each other."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

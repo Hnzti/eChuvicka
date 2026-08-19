@@ -22,6 +22,11 @@
 		B10000000000000000000D /* ConnectionStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000D /* ConnectionStatusBadge.swift */; };
 		B10000000000000000000E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000E /* Assets.xcassets */; };
 		B10000000000000000000F /* DeviceName.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000000000000000011 /* DeviceName.swift */; };
+		B100000000000000000010 /* MonitorAlertPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000000000000000012 /* MonitorAlertPlayer.swift */; };
+		B100000000000000000011 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A100000000000000000013 /* PrivacyInfo.xcprivacy */; };
+		B100000000000000000012 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A100000000000000000014 /* InfoPlist.xcstrings */; };
+		B100000000000000000013 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A100000000000000000015 /* Localizable.xcstrings */; };
+		B100000000000000000014 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000000000000000016 /* L10n.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +47,11 @@
 		A10000000000000000000F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A100000000000000000010 /* eChuvicka.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = eChuvicka.entitlements; sourceTree = "<group>"; };
 		A100000000000000000011 /* DeviceName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceName.swift; sourceTree = "<group>"; };
+		A100000000000000000012 /* MonitorAlertPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorAlertPlayer.swift; sourceTree = "<group>"; };
+		A100000000000000000013 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A100000000000000000014 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		A100000000000000000015 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A100000000000000000016 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		E100000000000000000002 /* eChuvicka.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = eChuvicka.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -68,12 +78,16 @@
 			isa = PBXGroup;
 			children = (
 				A100000000000000000001 /* eChuvickaApp.swift */,
+				A100000000000000000016 /* L10n.swift */,
 				C100000000000000000003 /* Models */,
 				C100000000000000000004 /* Services */,
 				C100000000000000000005 /* Views */,
 				A10000000000000000000E /* Assets.xcassets */,
 				A10000000000000000000F /* Info.plist */,
 				A100000000000000000010 /* eChuvicka.entitlements */,
+				A100000000000000000013 /* PrivacyInfo.xcprivacy */,
+				A100000000000000000014 /* InfoPlist.xcstrings */,
+				A100000000000000000015 /* Localizable.xcstrings */,
 			);
 			path = eChuvicka;
 			sourceTree = "<group>";
@@ -93,6 +107,7 @@
 			children = (
 				A100000000000000000004 /* AudioManager.swift */,
 				A100000000000000000005 /* HeartbeatMonitor.swift */,
+				A100000000000000000012 /* MonitorAlertPlayer.swift */,
 				A100000000000000000006 /* NetworkManager.swift */,
 				A100000000000000000007 /* SessionCoordinator.swift */,
 			);
@@ -188,6 +203,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				B10000000000000000000E /* Assets.xcassets in Resources */,
+				B100000000000000000011 /* PrivacyInfo.xcprivacy in Resources */,
+				B100000000000000000012 /* InfoPlist.xcstrings in Resources */,
+				B100000000000000000013 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,6 +217,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B100000000000000000001 /* eChuvickaApp.swift in Sources */,
+				B100000000000000000014 /* L10n.swift in Sources */,
 				B100000000000000000002 /* AppRole.swift in Sources */,
 				B100000000000000000003 /* AppSettings.swift in Sources */,
 				B100000000000000000004 /* AudioManager.swift in Sources */,
@@ -212,6 +231,7 @@
 				B10000000000000000000C /* AudioLevelView.swift in Sources */,
 				B10000000000000000000D /* ConnectionStatusBadge.swift in Sources */,
 				B10000000000000000000F /* DeviceName.swift in Sources */,
+				B100000000000000000010 /* MonitorAlertPlayer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -348,20 +368,21 @@
 				CODE_SIGN_ENTITLEMENTS = eChuvicka/eChuvicka.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 8;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = eChuvicka/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "eChůvička";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.1.3;
+				MARKETING_VERSION = 1.1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hnzti.eChuvicka;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -382,20 +403,21 @@
 				CODE_SIGN_ENTITLEMENTS = eChuvicka/eChuvicka.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 8;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = eChuvicka/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "eChůvička";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.1.3;
+				MARKETING_VERSION = 1.1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hnzti.eChuvicka;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

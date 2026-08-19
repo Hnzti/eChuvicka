@@ -11,7 +11,7 @@ struct RoleSelectionView: View {
                 Image(systemName: "moon.stars.fill")
                     .font(.system(size: 40))
                     .foregroundStyle(.indigo)
-                Text("eChůvička")
+                Text(AppBrand.displayName)
                     .font(.system(size: 40, weight: .bold, design: .rounded))
             }
             .padding(.bottom, 20)
@@ -30,8 +30,10 @@ struct RoleSelectionView: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                NavigationLink(destination: SettingsView(role: .none)) {
-                    Label("Nastavení", systemImage: "gearshape")
+                NavigationLink {
+                    SettingsView(role: .none)
+                } label: {
+                    Label(L10n.Common.settings, systemImage: "gearshape")
                 }
             }
         }
@@ -40,8 +42,8 @@ struct RoleSelectionView: View {
     @ViewBuilder
     var cards: some View {
         RoleCard(
-            title: "Dítě",
-            subtitle: "Vysílač zvuku",
+            title: L10n.Role.child,
+            subtitle: L10n.Role.childSubtitle,
             iconName: "figure.and.child.holdinghands",
             gradientColors: [.blue, .indigo]
         ) {
@@ -49,8 +51,8 @@ struct RoleSelectionView: View {
         }
         
         RoleCard(
-            title: "Rodič",
-            subtitle: "Přijímač zvuku",
+            title: L10n.Role.parent,
+            subtitle: L10n.Role.parentSubtitle,
             iconName: "ear",
             gradientColors: [.green, .teal]
         ) {

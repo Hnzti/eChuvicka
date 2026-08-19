@@ -5,6 +5,9 @@ import UIKit
 #if canImport(IOKit)
 import IOKit.ps
 #endif
+#if os(macOS)
+import CoreWLAN
+#endif
 import Combine
 
 public struct HeartbeatPacket: Codable, Sendable {
@@ -16,6 +19,8 @@ public struct HeartbeatPacket: Codable, Sendable {
 public class HeartbeatMonitor: ObservableObject {
     @Published public var isConnectionAlive: Bool = false
     @Published public var lastLatencyMs: Double = 0
+    /// Wi‑Fi RSSI in dBm when the platform exposes it (macOS). `nil` on iOS.
+    @Published public var wifiRSSIDbm: Int? = nil
     
     private var heartbeatTimer: Timer?
     private var lastReceivedTimestamp: Date?
@@ -27,24 +32,30 @@ public class HeartbeatMonitor: ObservableObject {
     
     public init() {}
     
-    public func start(role: AppRole, alarmDelay: Double = 6.0) {
+    public func start(role _: AppRole, alarmDelay: Double = 6.0) {
+        stop()
         isConnectionAlive = true
         lastReceivedTimestamp = Date()
         self.disconnectAlarmDelay = alarmDelay
+        lastLatencyMs = 0
+        refreshWiFiRSSI()
         
-        // Send heartbeat every 2 seconds
         heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.onSendHeartbeat?()
             }
         }
         
-        // Check connection alive status every 1 second
         connectionCheckTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.checkConnectionAlive()
+                self?.refreshWiFiRSSI()
             }
         }
+    }
+    
+    public func updateAlarmDelay(_ delay: Double) {
+        disconnectAlarmDelay = max(5, min(30, delay))
     }
     
     public func stop() {
@@ -53,6 +64,7 @@ public class HeartbeatMonitor: ObservableObject {
         connectionCheckTimer?.invalidate()
         connectionCheckTimer = nil
         isConnectionAlive = false
+        wifiRSSIDbm = nil
     }
     
     public func dataReceived() {
@@ -64,14 +76,12 @@ public class HeartbeatMonitor: ObservableObject {
     
     public func heartbeatReceived(_ packet: HeartbeatPacket) {
         dataReceived()
-        let latency = Date().timeIntervalSince(packet.timestamp)
-        lastLatencyMs = max(0, latency * 1000.0)
+        lastLatencyMs = max(0, Date().timeIntervalSince(packet.timestamp) * 1000.0)
     }
     
     private func checkConnectionAlive() {
         guard let lastTimestamp = lastReceivedTimestamp else { return }
         
-        // If no data received for specified delay, mark as lost
         if Date().timeIntervalSince(lastTimestamp) > disconnectAlarmDelay {
             if isConnectionAlive {
                 isConnectionAlive = false
@@ -79,11 +89,24 @@ public class HeartbeatMonitor: ObservableObject {
         }
     }
     
+    private func refreshWiFiRSSI() {
+        #if os(macOS)
+        // CoreWLAN exposes interface RSSI in dBm (e.g. -45). Not available on iOS.
+        if let interface = CWWiFiClient.shared().interface() {
+            let rssi = interface.rssiValue()
+            wifiRSSIDbm = (rssi < 0) ? Int(rssi) : nil
+        } else {
+            wifiRSSIDbm = nil
+        }
+        #else
+        wifiRSSIDbm = nil
+        #endif
+    }
+    
     public static func currentBatteryLevel() -> Float {
         #if os(iOS)
         UIDevice.current.isBatteryMonitoringEnabled = true
         let level = UIDevice.current.batteryLevel
-        // batteryLevel returns -1.0 if monitoring is not enabled or unknown
         return level >= 0 ? level : 1.0
         #elseif os(macOS)
         return macOSBatteryLevel()
@@ -97,7 +120,7 @@ public class HeartbeatMonitor: ObservableObject {
         guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
               let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [Any],
               !sources.isEmpty else {
-            return 1.0 // Desktop Mac without battery
+            return 1.0
         }
         
         for source in sources {

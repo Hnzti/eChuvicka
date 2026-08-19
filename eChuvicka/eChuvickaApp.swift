@@ -3,6 +3,15 @@ import SwiftUI
 import UIKit
 #endif
 
+enum AppBrand {
+    /// Home Screen / in-app name: eChůvička (cs), eNany (en).
+    static var displayName: String {
+        let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+        if let name, !name.isEmpty { return name }
+        return "eChůvička"
+    }
+}
+
 @main
 struct eChuvickaApp: App {
     @StateObject private var coordinator = SessionCoordinator()
@@ -26,6 +35,7 @@ struct eChuvickaApp: App {
                     if phase == .active {
                         ScreenSleepPolicy.allowSystemAutoLock()
                     }
+                    coordinator.audioManager.handleScenePhase(phase)
                 }
                 #endif
         }

@@ -1,16 +1,27 @@
 import Foundation
 import Network
 
-public enum ConnectionMode: String, Sendable {
-    case disconnected = "Odpojeno"
-    case searching = "Vyhledávání..."
-    case connectedRouter = "Wi-Fi Router"
-    case connectedDirect = "Přímé spojení (P2P)"
+public enum ConnectionMode: Sendable, Equatable {
+    case disconnected
+    case searching
+    /// Infrastructure Wi‑Fi (router, hotspot, sdílená síť) — not AWDL peer-to-peer.
+    case connectedLocalNetwork
+    case connectedDirect
+
+    public var localizedTitle: String {
+        switch self {
+        case .disconnected: L10n.Connection.disconnected
+        case .searching: L10n.Connection.searching
+        case .connectedLocalNetwork: L10n.Connection.wifi
+        case .connectedDirect: L10n.Connection.p2p
+        }
+    }
 }
 
-/// Represents a discovered child device
+/// Discovered child unit. `id` is a stable installation UUID (not the pairing PIN).
 public struct DiscoveredDevice: Identifiable, Hashable {
-    public let id: String  // PIN
+    public let id: String
+    public let pairingPIN: String
     public let name: String
     public let displayName: String
     public let requiresPin: Bool
@@ -18,20 +29,29 @@ public struct DiscoveredDevice: Identifiable, Hashable {
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-        hasher.combine(requiresPin)
-        hasher.combine(displayName)
     }
     
     public static func == (lhs: DiscoveredDevice, rhs: DiscoveredDevice) -> Bool {
-        lhs.id == rhs.id && lhs.requiresPin == rhs.requiresPin && lhs.displayName == rhs.displayName
+        lhs.id == rhs.id
+            && lhs.pairingPIN == rhs.pairingPIN
+            && lhs.requiresPin == rhs.requiresPin
+            && lhs.displayName == rhs.displayName
     }
 }
 
 public struct DeviceInfoPacket: Codable, Sendable {
     public let deviceName: String
+    public let deviceId: String
 
-    public init(deviceName: String) {
+    public init(deviceName: String, deviceId: String = "") {
         self.deviceName = deviceName
+        self.deviceId = deviceId
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        deviceName = try container.decode(String.self, forKey: .deviceName)
+        deviceId = try container.decodeIfPresent(String.self, forKey: .deviceId) ?? ""
     }
 }
 
@@ -54,27 +74,163 @@ public struct SettingsPacket: Codable, Sendable {
     }
 }
 
+public struct AuthRequestPacket: Codable, Sendable {
+    public let pin: String
+    public let clientDeviceId: String
+    
+    public init(pin: String, clientDeviceId: String) {
+        self.pin = pin
+        self.clientDeviceId = clientDeviceId
+    }
+}
+
+public struct AuthResponsePacket: Codable, Sendable {
+    public let ok: Bool
+    public let deviceId: String
+    public let deviceName: String
+    public let message: String?
+    
+    public init(ok: Bool, deviceId: String, deviceName: String, message: String? = nil) {
+        self.ok = ok
+        self.deviceId = deviceId
+        self.deviceName = deviceName
+        self.message = message
+    }
+}
+
 @MainActor
 public class NetworkManager: ObservableObject {
     @Published public var connectionMode: ConnectionMode = .disconnected
+    /// True only after successful auth handshake.
     @Published public var isConnected: Bool = false
     @Published public var generatedPIN: String = ""
     @Published public var peerBatteryLevel: Float = 1.0
     @Published public var discoveredDevices: [DiscoveredDevice] = []
     @Published public var connectedDeviceName: String?
+    @Published public var connectedDeviceId: String?
+    @Published public var lastAuthError: String?
+    /// Soft status while recovering after Wi‑Fi/hotspot → P2P path change (not a hard failure).
+    @Published public var reconnectHint: String?
     
     public var onAudioDataReceived: (@Sendable (Data) -> Void)?
     public var onHeartbeatReceived: (@Sendable (HeartbeatPacket) -> Void)?
     public var onSettingsReceived: (@Sendable (SettingsPacket) -> Void)?
+    public var onAuthenticated: (@Sendable (_ peerDeviceId: String, _ peerName: String) -> Void)?
+    /// Fired when the system network path changes (hotspot off, Wi‑Fi switch, etc.).
+    public var onNetworkPathChanged: (@Sendable (_ isSatisfied: Bool) -> Void)?
     
     private var listener: NWListener?
     private var browser: NWBrowser?
     private var connection: NWConnection?
+    private var pathMonitor: NWPathMonitor?
+    private var lastPathStatus: NWPath.Status?
+    private var lastPathSignature: String = ""
+    private var childHostRestartTask: Task<Void, Never>?
+    private var connectTimeoutTask: Task<Void, Never>?
     
     private let serviceType = "_echuvicka._tcp"
-    private var hostedPairingPart = ""
+    private let maxPayloadLength: UInt32 = 256_000
+    private let connectTimeoutSeconds: TimeInterval = 12
     
-    public init() {}
+    private var hostedPairingPart = ""
+    private var hostedDeviceId = ""
+    private var hostedPIN = ""
+    private var hostedRequiresPin = true
+    private var localRole: AppRole = .none
+    private var localDeviceId = ""
+    private var localDisplayName = ""
+    private var pendingAuthPIN = ""
+    private var isAuthenticated = false
+    
+    /// TCP/auth handshake in progress (not yet fully connected).
+    public var isConnectionInProgress: Bool {
+        connection != nil && !isConnected
+    }
+    
+    public init() {
+        startPathMonitor()
+    }
+    
+    private func makeTCPParameters() -> NWParameters {
+        let tcp = NWProtocolTCP.Options()
+        tcp.enableKeepalive = true
+        tcp.keepaliveIdle = 10
+        tcp.keepaliveInterval = 5
+        tcp.keepaliveCount = 5
+        let params = NWParameters(tls: nil, tcp: tcp)
+        params.includePeerToPeer = true
+        // Prefer whichever interface works after hotspot → AWDL transitions.
+        params.serviceClass = .responsiveData
+        return params
+    }
+    
+    private func startPathMonitor() {
+        let monitor = NWPathMonitor()
+        pathMonitor = monitor
+        monitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor in
+                self?.handleSystemPathUpdate(path)
+            }
+        }
+        monitor.start(queue: .main)
+    }
+    
+    private func pathSignature(_ path: NWPath) -> String {
+        var parts: [String] = [String(describing: path.status)]
+        if path.usesInterfaceType(.wifi) { parts.append("wifi") }
+        if path.usesInterfaceType(.other) { parts.append("other") }
+        if path.usesInterfaceType(.cellular) { parts.append("cell") }
+        if path.usesInterfaceType(.wiredEthernet) { parts.append("eth") }
+        return parts.joined(separator: "|")
+    }
+    
+    private func handleSystemPathUpdate(_ path: NWPath) {
+        let signature = pathSignature(path)
+        let statusChanged = lastPathStatus != path.status
+        let previousSignature = lastPathSignature
+        let interfacesChanged = previousSignature != signature && !previousSignature.isEmpty
+        let previousStatus = lastPathStatus
+        lastPathStatus = path.status
+        lastPathSignature = signature
+        
+        guard statusChanged || interfacesChanged else { return }
+        print("[Network] Path changed: \(signature)")
+        
+        // Mac without a router often stays `.unsatisfied` even while AWDL/P2P works.
+        // Never kill an in-progress handshake for that — it was blocking Connect taps.
+        // Only drop an *authenticated* session when we clearly left infrastructure Wi‑Fi
+        // (e.g. hotspot turned off) or lost the previous wifi path entirely.
+        if isAuthenticated && isConnected {
+            let leftHotspotOrRouter =
+                previousStatus == .satisfied
+                && path.status != .satisfied
+                && previousSignature.contains("wifi")
+            let lostWifiWithoutAWDL =
+                previousSignature.contains("wifi")
+                && !signature.contains("wifi")
+                && !signature.contains("other")
+            if leftHotspotOrRouter || lostWifiWithoutAWDL {
+                print("[Network] Dropping authenticated link after infrastructure path loss")
+                lastAuthError = nil
+                reconnectHint = L10n.Hint.networkChangedRestore
+                handleDisconnect()
+            }
+        }
+        
+        // Child: recreate listener after interface change, debounced (don't flap during P2P).
+        if localRole == .child, !hostedDeviceId.isEmpty, !hostedPIN.isEmpty, interfacesChanged {
+            childHostRestartTask?.cancel()
+            childHostRestartTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                guard !Task.isCancelled else { return }
+                guard self.localRole == .child, !self.isAuthenticated else { return }
+                print("[Child] Restarting Bonjour listener after path change")
+                self.restartHostingPreservingIdentity()
+            }
+        }
+        
+        onNetworkPathChanged?(path.status == .satisfied)
+    }
     
     // MARK: - Child / Transmitter
     
@@ -91,27 +247,30 @@ public class NetworkManager: ObservableObject {
         return NWListener.Service(
             name: instanceName,
             type: serviceType,
-            txtRecord: NWTXTRecord(["deviceName": DeviceName.current(for: .child)])
+            txtRecord: NWTXTRecord([
+                "deviceName": DeviceName.current(for: .child),
+                "deviceId": hostedDeviceId
+            ])
         )
     }
     
-    /// Re-publishes the Bonjour service after the user changes the device name.
     public func refreshAdvertisedDeviceName() {
         guard let listener = listener, !hostedPairingPart.isEmpty else { return }
         listener.service = makeAdvertisedService()
         print("[Child] Re-advertising as \(advertisedInstanceName())")
     }
     
-    /// Switches PIN/OPEN in the live Bonjour name without regenerating the code.
     public func updatePinRequirement(_ isPinRequired: Bool) {
         guard listener != nil, !hostedPairingPart.isEmpty else { return }
         
-        let pin = hostedPairingPart.components(separatedBy: "-").last ?? generatedPIN
+        hostedRequiresPin = isPinRequired
+        let pin = hostedPIN.isEmpty ? (hostedPairingPart.components(separatedBy: "-").last ?? generatedPIN) : hostedPIN
         let newPrefix = isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-"
         let newPairingPart = newPrefix + pin
         guard newPairingPart != hostedPairingPart else { return }
         
         hostedPairingPart = newPairingPart
+        hostedPIN = pin
         if isPinRequired {
             generatedPIN = pin
         }
@@ -119,20 +278,39 @@ public class NetworkManager: ObservableObject {
         print("[Child] PIN requirement updated, advertising as \(advertisedInstanceName())")
     }
     
-    public func startHosting(isPinRequired: Bool) {
-        stop()
+    public func startHosting(isPinRequired: Bool, deviceId: String, pairingPIN: String) {
+        // Preserve path monitor; only tear down previous listener/browser/connection.
+        listener?.cancel()
+        listener = nil
+        browser?.cancel()
+        browser = nil
+        if let conn = connection {
+            conn.stateUpdateHandler = nil
+            conn.cancel()
+        }
+        connection = nil
+        isAuthenticated = false
+        isConnected = false
+        discoveredDevices = []
+        connectedDeviceName = nil
+        connectedDeviceId = nil
+        hostedPairingPart = ""
         
-        let pin = String(format: "%04d", Int.random(in: 0...9999))
-        generatedPIN = pin
+        localRole = .child
+        hostedDeviceId = deviceId
+        hostedPIN = pairingPIN
+        hostedRequiresPin = isPinRequired
+        localDeviceId = deviceId
+        localDisplayName = DeviceName.current(for: .child)
+        generatedPIN = pairingPIN
         
-        let params = NWParameters.tcp
-        params.includePeerToPeer = true
+        let params = makeTCPParameters()
         
         do {
             let nwListener = try NWListener(using: params)
-            hostedPairingPart = (isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-") + pin
+            hostedPairingPart = (isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-") + pairingPIN
             nwListener.service = makeAdvertisedService()
-            print("[Child] Advertising as \(advertisedInstanceName())")
+            print("[Child] Advertising as \(advertisedInstanceName()) id=\(deviceId)")
             
             nwListener.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor in
@@ -154,8 +332,14 @@ public class NetworkManager: ObservableObject {
             
             nwListener.newConnectionHandler = { [weak self] newConnection in
                 Task { @MainActor in
-                    print("[Child] Parent connected!")
-                    self?.setupConnection(newConnection)
+                    guard let self = self else { return }
+                    if self.isAuthenticated, self.connection != nil {
+                        print("[Child] Rejecting extra parent connection")
+                        newConnection.cancel()
+                        return
+                    }
+                    print("[Child] Incoming parent TCP — awaiting auth")
+                    self.setupConnection(newConnection, asParentClient: false)
                 }
             }
             
@@ -168,14 +352,64 @@ public class NetworkManager: ObservableObject {
         }
     }
     
+    /// Recreate listener/Bonjour after Wi‑Fi/hotspot/AWDL change without changing PIN or device id.
+    public func restartHostingPreservingIdentity() {
+        guard localRole == .child, !hostedDeviceId.isEmpty, !hostedPIN.isEmpty else { return }
+        let deviceId = hostedDeviceId
+        let pin = hostedPIN
+        let requiresPin = hostedRequiresPin
+        
+        // Tear down only listener + peer link; keep role / identity.
+        if let conn = connection {
+            conn.stateUpdateHandler = nil
+            conn.cancel()
+        }
+        connection = nil
+        isAuthenticated = false
+        isConnected = false
+        
+        listener?.cancel()
+        listener = nil
+        
+        startHosting(isPinRequired: requiresPin, deviceId: deviceId, pairingPIN: pin)
+    }
+    
     // MARK: - Parent / Receiver
     
     public func startBrowsing() {
-        stop()
+        let keepRole = localRole
+        stopBrowsingOnly()
+        if !isConnected && !isConnectionInProgress {
+            if let conn = connection {
+                conn.stateUpdateHandler = nil
+                conn.cancel()
+            }
+            connection = nil
+            isAuthenticated = false
+        }
         
-        let params = NWParameters.tcp
-        params.includePeerToPeer = true
-        
+        localRole = keepRole == .none ? .parent : keepRole
+        beginBrowser()
+    }
+    
+    /// Fresh Bonjour browse without killing a connection attempt mid-flight.
+    public func restartBrowserPreservingConnectionAttempt() {
+        guard localRole == .parent else {
+            startBrowsing()
+            return
+        }
+        stopBrowsingOnly()
+        beginBrowser()
+    }
+    
+    private func stopBrowsingOnly() {
+        browser?.cancel()
+        browser = nil
+        discoveredDevices = []
+    }
+    
+    private func beginBrowser() {
+        let params = makeTCPParameters()
         let nwBrowser = NWBrowser(for: .bonjour(type: serviceType, domain: nil), using: params)
         
         nwBrowser.stateUpdateHandler = { [weak self] state in
@@ -187,7 +421,9 @@ public class NetworkManager: ObservableObject {
                     print("[Parent] Browser ready, searching for children...")
                 case .failed(let error):
                     print("[Parent] Browser failed: \(error)")
-                    self.connectionMode = .disconnected
+                    if !self.isConnected {
+                        self.connectionMode = .disconnected
+                    }
                 case .cancelled:
                     break
                 default:
@@ -205,11 +441,20 @@ public class NetworkManager: ObservableObject {
                     guard case let .service(name, _, _, _) = result.endpoint else { continue }
                     
                     let requiresPin = name.contains("-PIN-")
-                    let id = DeviceName.pairingPIN(fromServiceInstanceName: name)
+                    let pairingPIN = DeviceName.pairingPIN(fromServiceInstanceName: name)
                     
                     var txtName: String?
+                    var txtDeviceId: String?
                     if case .bonjour(let txtRecord) = result.metadata {
                         txtName = txtRecord["deviceName"]
+                        txtDeviceId = txtRecord["deviceId"]
+                    }
+                    
+                    let stableId: String
+                    if let txtDeviceId, !txtDeviceId.isEmpty {
+                        stableId = txtDeviceId
+                    } else {
+                        stableId = "pin:\(pairingPIN)"
                     }
                     let displayName = DeviceName.displayName(
                         fromServiceInstanceName: name,
@@ -217,7 +462,8 @@ public class NetworkManager: ObservableObject {
                     )
                     
                     devices.append(DiscoveredDevice(
-                        id: id,
+                        id: stableId,
+                        pairingPIN: pairingPIN,
                         name: name,
                         displayName: displayName,
                         requiresPin: requiresPin,
@@ -232,32 +478,79 @@ public class NetworkManager: ObservableObject {
         
         nwBrowser.start(queue: .main)
         browser = nwBrowser
-        connectionMode = .searching
+        if !isConnected {
+            connectionMode = .searching
+        }
+        localRole = .parent
     }
     
-    public func connectToDevice(_ device: DiscoveredDevice) {
+    public func connectToDevice(
+        _ device: DiscoveredDevice,
+        authPIN: String,
+        localDeviceId: String,
+        localDeviceName: String
+    ) {
         connectedDeviceName = device.displayName
-        print("[Parent] Connecting to device: \(device.displayName) (\(device.name))")
+        connectedDeviceId = device.id
+        pendingAuthPIN = authPIN
+        self.localDeviceId = localDeviceId
+        self.localDisplayName = localDeviceName
+        localRole = .parent
+        lastAuthError = nil
+        reconnectHint = L10n.Hint.connecting(to: device.displayName)
+        print("[Parent] Connecting to \(device.displayName) id=\(device.id) service=\(device.name)")
         
-        let params = NWParameters.tcp
-        params.includePeerToPeer = true
+        let params = makeTCPParameters()
+        // Always resolve by Bonjour service name so we don't reuse a dead hotspot endpoint.
+        let endpoint = NWEndpoint.service(
+            name: device.name,
+            type: serviceType,
+            domain: "local.",
+            interface: nil
+        )
+        let newConnection = NWConnection(to: endpoint, using: params)
         
-        let newConnection = NWConnection(to: device.endpoint, using: params)
-        
-        browser?.cancel()
-        browser = nil
-        
-        setupConnection(newConnection)
+        // Keep browsing until auth succeeds — cancelling Bonjour early breaks some P2P paths on macOS.
+        setupConnection(newConnection, asParentClient: true)
+        startConnectTimeout()
+    }
+    
+    private func startConnectTimeout() {
+        connectTimeoutTask?.cancel()
+        connectTimeoutTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(connectTimeoutSeconds * 1_000_000_000))
+            guard !Task.isCancelled else { return }
+            guard isConnectionInProgress, !isAuthenticated else { return }
+            print("[Parent] Connect timed out after \(Int(connectTimeoutSeconds))s")
+            lastAuthError = nil
+            reconnectHint = L10n.Hint.connectTimeout
+            if let conn = connection {
+                conn.stateUpdateHandler = nil
+                conn.cancel()
+            }
+            handleDisconnect()
+            // Resume discovery so the user can tap again / auto-reconnect can retry.
+            if localRole == .parent {
+                restartBrowserPreservingConnectionAttempt()
+            }
+        }
+    }
+    
+    private func cancelConnectTimeout() {
+        connectTimeoutTask?.cancel()
+        connectTimeoutTask = nil
     }
     
     // MARK: - Connection Setup
     
-    private func setupConnection(_ newConnection: NWConnection) {
+    private func setupConnection(_ newConnection: NWConnection, asParentClient: Bool) {
         if let old = connection {
             old.stateUpdateHandler = nil
             old.cancel()
         }
         connection = newConnection
+        isAuthenticated = false
+        isConnected = false
         
         newConnection.stateUpdateHandler = { [weak self] state in
             Task { @MainActor in
@@ -266,16 +559,29 @@ public class NetworkManager: ObservableObject {
                 case .preparing:
                     print("[Connection] Preparing...")
                 case .ready:
-                    print("[Connection] Ready!")
-                    self.isConnected = true
+                    print("[Connection] TCP ready — starting auth")
+                    self.cancelConnectTimeout()
                     self.updateConnectionMode(from: newConnection.currentPath)
                     self.startReceiving()
-                    self.sendDeviceInfo()
+                    if asParentClient {
+                        self.sendAuthRequest()
+                    }
                 case .failed(let error):
                     print("[Connection] Failed: \(error)")
+                    self.cancelConnectTimeout()
+                    self.applyConnectionFailure(error)
                     self.handleDisconnect()
+                    if self.localRole == .parent {
+                        self.restartBrowserPreservingConnectionAttempt()
+                    }
+                case .waiting(let error):
+                    print("[Connection] Waiting: \(error)")
+                    // Transient — e.g. after hotspot off before AWDL is up.
+                    self.lastAuthError = nil
+                    self.reconnectHint = L10n.Hint.waitingP2P
                 case .cancelled:
                     print("[Connection] Cancelled")
+                    self.cancelConnectTimeout()
                     self.handleDisconnect()
                 default:
                     break
@@ -285,7 +591,7 @@ public class NetworkManager: ObservableObject {
         
         newConnection.pathUpdateHandler = { [weak self] newPath in
             Task { @MainActor in
-                guard let self = self, self.isConnected else { return }
+                guard let self = self, self.connection != nil else { return }
                 self.updateConnectionMode(from: newPath)
             }
         }
@@ -293,35 +599,143 @@ public class NetworkManager: ObservableObject {
         newConnection.start(queue: .main)
     }
     
-    /// AWDL / peer-to-peer shows up as `.other`. Infrastructure Wi‑Fi or Ethernet → router.
+    private func sendAuthRequest() {
+        let packet = AuthRequestPacket(pin: pendingAuthPIN, clientDeviceId: localDeviceId)
+        guard let data = try? JSONEncoder().encode(packet) else { return }
+        sendFramedMessage(type: 0x05, payload: data, requireAuth: false)
+    }
+    
+    private func handleAuthRequest(_ packet: AuthRequestPacket) {
+        guard localRole == .child else { return }
+        
+        let pinOK: Bool
+        if hostedRequiresPin {
+            pinOK = packet.pin == hostedPIN
+        } else {
+            pinOK = true
+        }
+        
+        let response = AuthResponsePacket(
+            ok: pinOK,
+            deviceId: hostedDeviceId,
+            deviceName: DeviceName.current(for: .child),
+            message: pinOK ? nil : "invalid_pin"
+        )
+        if let data = try? JSONEncoder().encode(response) {
+            sendFramedMessage(type: 0x06, payload: data, requireAuth: false)
+        }
+        
+        if pinOK {
+            markAuthenticated(peerDeviceId: packet.clientDeviceId, peerName: L10n.Device.parentDefault)
+            sendDeviceInfo()
+        } else {
+            print("[Child] Auth rejected")
+            connection?.cancel()
+            handleDisconnect()
+        }
+    }
+    
+    private func handleAuthResponse(_ packet: AuthResponsePacket) {
+        guard localRole == .parent else { return }
+        if packet.ok {
+            connectedDeviceId = packet.deviceId
+            connectedDeviceName = packet.deviceName
+            markAuthenticated(peerDeviceId: packet.deviceId, peerName: packet.deviceName)
+            sendDeviceInfo()
+        } else {
+            lastAuthError = L10n.Auth.message(fromNetwork: packet.message)
+            print("[Parent] Auth failed: \(lastAuthError ?? "")")
+            connection?.cancel()
+            handleDisconnect()
+        }
+    }
+    
+    private func markAuthenticated(peerDeviceId: String, peerName: String) {
+        cancelConnectTimeout()
+        isAuthenticated = true
+        isConnected = true
+        reconnectHint = nil
+        lastAuthError = nil
+        connectedDeviceId = peerDeviceId.isEmpty ? connectedDeviceId : peerDeviceId
+        if !peerName.isEmpty {
+            connectedDeviceName = peerName
+        }
+        // Stop browsing once linked to save energy.
+        browser?.cancel()
+        browser = nil
+        onAuthenticated?(connectedDeviceId ?? peerDeviceId, connectedDeviceName ?? peerName)
+    }
+    
+    private func handleDisconnect() {
+        cancelConnectTimeout()
+        isAuthenticated = false
+        isConnected = false
+        connectionMode = .disconnected
+        connectedDeviceName = nil
+        connectedDeviceId = nil
+        connection = nil
+    }
+    
+    private func applyConnectionFailure(_ error: NWError) {
+        if Self.isTransientNetworkError(error) {
+            lastAuthError = nil
+            reconnectHint = L10n.Hint.networkChangedRetry
+            return
+        }
+        reconnectHint = nil
+        lastAuthError = L10n.Hint.connectionFailed
+    }
+    
+    /// Hotspot/Wi‑Fi teardown often surfaces as ENOTCONN (57) / POSIX / DNS failures.
+    static func isTransientNetworkError(_ error: NWError) -> Bool {
+        switch error {
+        case .posix(let code):
+            switch code {
+            case .ENOTCONN, .ENETDOWN, .ENETUNREACH, .EHOSTUNREACH, .ECONNRESET, .EPIPE, .ETIMEDOUT, .ECONNABORTED:
+                return true
+            default:
+                return false
+            }
+        case .dns:
+            return true
+        default:
+            let text = error.localizedDescription.lowercased()
+            return text.contains("not connected")
+                || text.contains("socket")
+                || text.contains("network is down")
+                || text.contains("57")
+        }
+    }
+    
     private func updateConnectionMode(from path: NWPath?) {
         guard let path else {
             connectionMode = .connectedDirect
             return
         }
         
-        // Peer-to-peer (AirDrop-style AWDL) — devices next to each other, no router needed.
         if path.usesInterfaceType(.other) {
             connectionMode = .connectedDirect
             return
         }
         
         if path.usesInterfaceType(.wifi) || path.usesInterfaceType(.wiredEthernet) {
-            connectionMode = .connectedRouter
+            connectionMode = .connectedLocalNetwork
             return
         }
         
         connectionMode = .connectedDirect
     }
     
-    private func handleDisconnect() {
-        isConnected = false
-        connectionMode = .disconnected
-        connectedDeviceName = nil
-        connection = nil
+    public func clearConnectionErrors() {
+        lastAuthError = nil
+        reconnectHint = nil
     }
     
     public func stop() {
+        stop(preservingRole: false)
+    }
+    
+    private func stop(preservingRole: Bool) {
         listener?.cancel()
         listener = nil
         hostedPairingPart = ""
@@ -335,36 +749,52 @@ public class NetworkManager: ObservableObject {
         }
         connection = nil
         
+        isAuthenticated = false
         isConnected = false
         connectionMode = .disconnected
         discoveredDevices = []
         connectedDeviceName = nil
+        connectedDeviceId = nil
+        lastAuthError = nil
+        reconnectHint = nil
+        if !preservingRole {
+            localRole = .none
+        }
     }
     
     // MARK: - Data Transfer
     
     public func sendAudioData(_ data: Data) {
-        sendFramedMessage(type: 0x01, payload: data)
+        sendFramedMessage(type: 0x01, payload: data, requireAuth: true)
     }
     
     public func sendHeartbeat(_ packet: HeartbeatPacket) {
         guard let data = try? JSONEncoder().encode(packet) else { return }
-        sendFramedMessage(type: 0x02, payload: data)
+        sendFramedMessage(type: 0x02, payload: data, requireAuth: true)
     }
     
     public func sendSettings(_ packet: SettingsPacket) {
         guard let data = try? JSONEncoder().encode(packet) else { return }
-        sendFramedMessage(type: 0x03, payload: data)
+        sendFramedMessage(type: 0x03, payload: data, requireAuth: true)
     }
     
     public func sendDeviceInfo() {
-        let packet = DeviceInfoPacket(deviceName: DeviceName.current(for: .child))
+        let roleForName: AppRole = (localRole == .parent) ? .parent : .child
+        let packet = DeviceInfoPacket(
+            deviceName: DeviceName.current(for: roleForName),
+            deviceId: localDeviceId.isEmpty ? hostedDeviceId : localDeviceId
+        )
         guard let data = try? JSONEncoder().encode(packet) else { return }
-        sendFramedMessage(type: 0x04, payload: data)
+        sendFramedMessage(type: 0x04, payload: data, requireAuth: true)
     }
     
-    private func sendFramedMessage(type: UInt8, payload: Data) {
-        guard let connection = connection, isConnected else { return }
+    private func sendFramedMessage(type: UInt8, payload: Data, requireAuth: Bool) {
+        guard let connection = connection else { return }
+        if requireAuth && !isAuthenticated { return }
+        guard payload.count <= Int(maxPayloadLength) else {
+            print("[Send] Payload too large (\(payload.count)) — dropped")
+            return
+        }
         
         var message = Data()
         message.append(type)
@@ -402,37 +832,68 @@ public class NetworkManager: ObservableObject {
             let lengthData = headerData.subdata(in: 1..<5)
             let length = UInt32(bigEndian: lengthData.withUnsafeBytes { $0.load(as: UInt32.self) })
             
-            connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { [weak self] payloadData, _, _, error2 in
-                if let error2 = error2 {
-                    print("[Receive] Payload error: \(error2)")
-                    Task { @MainActor in self?.handleDisconnect() }
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                if length == 0 || length > self.maxPayloadLength {
+                    print("[Receive] Invalid payload length \(length) — disconnect")
+                    self.handleDisconnect()
                     return
                 }
                 
-                Task { @MainActor [weak self] in
-                    if let payloadData = payloadData {
-                        if type == 0x01 {
-                            self?.onAudioDataReceived?(payloadData)
-                        } else if type == 0x02 {
-                            if let packet = try? JSONDecoder().decode(HeartbeatPacket.self, from: payloadData) {
-                                self?.onHeartbeatReceived?(packet)
-                                self?.peerBatteryLevel = packet.batteryLevel
-                            }
-                        } else if type == 0x03 {
-                            if let packet = try? JSONDecoder().decode(SettingsPacket.self, from: payloadData) {
-                                self?.onSettingsReceived?(packet)
-                            }
-                        } else if type == 0x04 {
-                            if let packet = try? JSONDecoder().decode(DeviceInfoPacket.self, from: payloadData),
-                               !packet.deviceName.isEmpty {
-                                self?.connectedDeviceName = packet.deviceName
-                                print("[Connection] Peer device name: \(packet.deviceName)")
-                            }
-                        }
+                connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { [weak self] payloadData, _, _, error2 in
+                    if let error2 = error2 {
+                        print("[Receive] Payload error: \(error2)")
+                        Task { @MainActor in self?.handleDisconnect() }
+                        return
                     }
-                    self?.startReceiving()
+                    
+                    Task { @MainActor [weak self] in
+                        if let payloadData = payloadData {
+                            self?.dispatchPayload(type: type, data: payloadData)
+                        }
+                        self?.startReceiving()
+                    }
                 }
             }
+        }
+    }
+    
+    private func dispatchPayload(type: UInt8, data: Data) {
+        switch type {
+        case 0x05:
+            if let packet = try? JSONDecoder().decode(AuthRequestPacket.self, from: data) {
+                handleAuthRequest(packet)
+            }
+        case 0x06:
+            if let packet = try? JSONDecoder().decode(AuthResponsePacket.self, from: data) {
+                handleAuthResponse(packet)
+            }
+        case 0x01:
+            guard isAuthenticated else { return }
+            onAudioDataReceived?(data)
+        case 0x02:
+            guard isAuthenticated else { return }
+            if let packet = try? JSONDecoder().decode(HeartbeatPacket.self, from: data) {
+                onHeartbeatReceived?(packet)
+                peerBatteryLevel = packet.batteryLevel
+            }
+        case 0x03:
+            guard isAuthenticated else { return }
+            if let packet = try? JSONDecoder().decode(SettingsPacket.self, from: data) {
+                onSettingsReceived?(packet)
+            }
+        case 0x04:
+            guard isAuthenticated else { return }
+            if let packet = try? JSONDecoder().decode(DeviceInfoPacket.self, from: data),
+               !packet.deviceName.isEmpty {
+                connectedDeviceName = packet.deviceName
+                if !packet.deviceId.isEmpty {
+                    connectedDeviceId = packet.deviceId
+                }
+                print("[Connection] Peer device name: \(packet.deviceName)")
+            }
+        default:
+            break
         }
     }
 }

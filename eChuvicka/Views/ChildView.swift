@@ -7,7 +7,6 @@ struct ChildView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
     @EnvironmentObject var settings: AppSettings
     @Environment(\.colorScheme) var colorScheme
-    @State private var showingSettings = false
 
     var body: some View {
         ZStack {
@@ -20,7 +19,7 @@ struct ChildView: View {
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
-                            Text("Zpět")
+                            Text(L10n.Common.back)
                         }
                         .font(.system(.body, design: .rounded, weight: .medium))
                     }
@@ -34,9 +33,13 @@ struct ChildView: View {
                     
                     Spacer()
                     
-                    Button(action: {
-                        showingSettings = true
-                    }) {
+                    NavigationLink {
+                        SettingsView(
+                            role: .child,
+                            onCommitDeviceName: { coordinator.applyDeviceNameChange() },
+                            onPinRequirementChange: { coordinator.applyPinRequirementChange() }
+                        )
+                    } label: {
                         Image(systemName: "gearshape.fill")
                             .font(.system(.body, weight: .bold))
                     }
@@ -56,7 +59,7 @@ struct ChildView: View {
                         // PIN Display
                         VStack(spacing: 12) {
                             if coordinator.appSettings.isPinRequired {
-                                Text("Párovací PIN kód")
+                                Text(L10n.Child.pairingPin)
                                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                     .foregroundColor(.secondary)
                                 
@@ -74,7 +77,7 @@ struct ChildView: View {
                                             .stroke(Color.blue.opacity(0.3), lineWidth: 2)
                                     )
                             } else {
-                                Text("Otevřené spojení (bez PINu)")
+                                Text(L10n.Child.openConnection)
                                     .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                     .foregroundColor(.secondary)
                                     .padding(.vertical, 20)
@@ -85,7 +88,8 @@ struct ChildView: View {
                         // Status Badge
                         ConnectionStatusBadge(
                             mode: coordinator.connectionMode,
-                            latencyMs: coordinator.latencyMs
+                            latencyMs: coordinator.latencyMs,
+                            wifiRSSIDbm: coordinator.wifiRSSIDbm
                         )
                         
                         // Audio Visualizer
@@ -102,7 +106,7 @@ struct ChildView: View {
                                         Circle()
                                             .fill(Color.orange)
                                             .frame(width: 12, height: 12)
-                                        Text("PŘENÁŠÍ ZVUK K RODIČI!")
+                                        Text(L10n.Child.transmitting)
                                             .font(.system(.headline, design: .rounded, weight: .bold))
                                             .foregroundColor(.orange)
                                     }
@@ -111,27 +115,27 @@ struct ChildView: View {
                                         Circle()
                                             .fill(Color.green)
                                             .frame(width: 10, height: 10)
-                                        Text("MIKROFON JE ZAPNUTÝ")
+                                        Text(L10n.Child.micOn)
                                             .font(.system(.headline, design: .rounded, weight: .bold))
                                             .foregroundColor(.green)
                                     }
                                 }
                                 
                                 if coordinator.isParentSpeaking {
-                                    Text("Rodič mluví...")
+                                    Text(L10n.Child.parentSpeaking)
                                         .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                         .foregroundColor(.blue)
                                         .padding(.top, 4)
                                 }
                             } else {
-                                Text("Čekání na spojení...")
+                                Text(L10n.Child.waiting)
                                     .font(.system(.body, design: .rounded))
                                     .foregroundColor(.secondary)
                             }
                         }
                         
                         #if os(iOS)
-                        Text("Pro zhasnutí displeje zamkněte iPhone bočním tlačítkem. Mikrofon a přenos běží dál na pozadí — usínání řídí systém.")
+                        Text(L10n.Child.lockHint)
                             .font(.system(.caption, design: .rounded))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -145,26 +149,6 @@ struct ChildView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .sheet(isPresented: $showingSettings) {
-            NavigationStack {
-                SettingsView(
-                    role: .child,
-                    onCommitDeviceName: { coordinator.applyDeviceNameChange() },
-                    onPinRequirementChange: { coordinator.applyPinRequirementChange() }
-                )
-                .environmentObject(settings)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Hotovo") {
-                            showingSettings = false
-                        }
-                    }
-                }
-            }
-            #if os(macOS)
-            .frame(minWidth: 420, minHeight: 520)
-            #endif
-        }
         .onReceive(coordinator.audioManager.$audioLevel) { _ in }
         .onReceive(coordinator.audioManager.$isTransmitting) { _ in }
         #if os(iOS)

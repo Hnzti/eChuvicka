@@ -3,8 +3,8 @@ import Foundation
 @MainActor
 enum DeviceName {
     static let storageKey = "deviceName"
-    static let childDefault = "Dětská jednotka"
-    static let parentDefault = "Rodičovská jednotka"
+    static var childDefault: String { L10n.Device.childDefault }
+    static var parentDefault: String { L10n.Device.parentDefault }
 
     /// Appended to the Bonjour instance name after the PIN part — always visible to the parent
     /// browser without relying on TXT records.
