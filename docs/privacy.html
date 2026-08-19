@@ -3,46 +3,93 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>eChůvička / eNany — Zásady ochrany soukromí</title>
+  <title>eChůvička / eNany — Privacy Policy</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; line-height: 1.5; color: #111; }
     a { color: #3d4fd6; }
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.15rem; margin-top: 1.6rem; }
+    .lang { display: flex; gap: 12px; margin-bottom: 1.6rem; font-size: 0.95rem; }
+    .lang a { color: #666; text-decoration: none; }
+    .lang a.active { color: #111; font-weight: 600; }
+    [data-lang] { display: none; }
+    html[data-ui="cs"] [data-lang="cs"],
+    html[data-ui="en"] [data-lang="en"] { display: block; }
   </style>
 </head>
 <body>
-  <h1>Zásady ochrany soukromí</h1>
-  <p><strong>eChůvička</strong> / <strong>eNany</strong> 1.0<br />Účinnost: 19. srpna 2026</p>
+  <nav class="lang">
+    <a href="?lang=cs" data-switch="cs">Česky</a>
+    <a href="?lang=en" data-switch="en">English</a>
+  </nav>
 
-  <h2>Přehled</h2>
-  <p>eChůvička (v angličtině eNany) je lokální audio chůvička pro zařízení Apple. Nepožaduje účet a nepoužívá cloudovou službu. Zvuk se přenáší jen mezi vašimi zařízeními v místní síti (Wi‑Fi nebo přímé P2P).</p>
+  <div data-lang="cs">
+    <h1>Zásady ochrany soukromí</h1>
+    <p><strong>eChůvička</strong> / <strong>eNany</strong> 1.0<br />Účinnost: 19. srpna 2026</p>
 
-  <h2>Jaké údaje aplikace používá</h2>
-  <p>eChůvička nesbírá osobní údaje pro analytiku, reklamu ani sledování.</p>
-  <p>Mikrofon se používá výhradně k přenosu zvuku mezi vámi zvolenou dětskou a rodičovskou jednotkou. Zvuk se neukládá u vývojáře a neodesílá se na internet.</p>
-  <p>Nastavení (název zařízení, VOX, PIN, prahy upozornění) se ukládají jen v zařízení (UserDefaults).</p>
+    <h2>Přehled</h2>
+    <p>eChůvička (v angličtině eNany) je lokální audio chůvička pro zařízení Apple. Nepožaduje účet a nepoužívá cloudovou službu. Zvuk se přenáší jen mezi vašimi zařízeními v místní síti (Wi‑Fi nebo přímé P2P).</p>
 
-  <h2>Sledování</h2>
-  <p>eChůvička vás nesleduje napříč aplikacemi ani weby a nepoužívá reklamní identifikátory.</p>
+    <h2>Jaké údaje aplikace používá</h2>
+    <p>eChůvička nesbírá osobní údaje pro analytiku, reklamu ani sledování.</p>
+    <p>Mikrofon se používá výhradně k přenosu zvuku mezi vámi zvolenou dětskou a rodičovskou jednotkou. Zvuk se neukládá u vývojáře a neodesílá se na internet.</p>
+    <p>Nastavení (název zařízení, VOX, PIN, prahy upozornění) se ukládají jen v zařízení (UserDefaults).</p>
 
-  <h2>Třetí strany</h2>
-  <p>eChůvička neprodává údaje a nesdílí data aplikace s analytickými ani reklamními SDK třetích stran.</p>
+    <h2>Sledování</h2>
+    <p>eChůvička vás nesleduje napříč aplikacemi ani weby a nepoužívá reklamní identifikátory.</p>
 
-  <h2>Děti</h2>
-  <p>Aplikace slouží rodičům ke kontrole spánku dítěte. Nesbírá osobní údaje dětí a neodesílá je vývojáři.</p>
+    <h2>Třetí strany</h2>
+    <p>eChůvička neprodává údaje a nesdílí data aplikace s analytickými ani reklamními SDK třetích stran.</p>
 
-  <h2>Kontakt</h2>
-  <p>Dotazy k soukromí:<br />
-  <strong>Jan Kalina</strong><br />
-  E-mail: <a href="mailto:galerie.musheri_7e@icloud.com">galerie.musheri_7e@icloud.com</a></p>
+    <h2>Děti</h2>
+    <p>Aplikace slouží rodičům ke kontrole spánku dítěte. Nesbírá osobní údaje dětí a neodesílá je vývojáři.</p>
 
-  <p><a href="index.html">Zpět na podporu / Back to Support</a></p>
+    <h2>Kontakt</h2>
+    <p>Dotazy k soukromí:<br />
+    <strong>Jan Kalina</strong><br />
+    E-mail: <a href="mailto:kalinajan93@icloud.com">kalinajan93@icloud.com</a></p>
+    <p><a href="index.html?lang=cs">Zpět na podporu</a></p>
+  </div>
 
-  <hr style="border:0;border-top:1px solid #ddd;margin:2.2rem 0" />
+  <div data-lang="en">
+    <h1>Privacy Policy</h1>
+    <p><strong>eNany</strong> / <strong>eChůvička</strong> 1.0<br />Effective: 19 August 2026</p>
 
-  <h1 lang="en">Privacy Policy</h1>
-  <p lang="en"><strong>eNany</strong> (Czech name eChůvička) does not collect personal data for analytics, advertising, or tracking. Microphone audio is sent only between your own devices on the local network and is not stored by the developer. Settings stay on the device.</p>
-  <p lang="en">Contact: Jan Kalina — <a href="mailto:galerie.musheri_7e@icloud.com">galerie.musheri_7e@icloud.com</a></p>
+    <h2>Overview</h2>
+    <p>eNany (Czech name eChůvička) is a local audio baby monitor for Apple devices. It does not require an account and does not use a cloud service. Audio is sent only between your own devices on the local network (Wi‑Fi or a direct P2P link).</p>
+
+    <h2>What data the app uses</h2>
+    <p>eNany does not collect personal data for analytics, advertising, or tracking.</p>
+    <p>The microphone is used only to send audio between the baby and parent units you choose. Audio is not stored by the developer and is not sent to the internet.</p>
+    <p>Settings (device name, VOX, PIN, alert thresholds) stay on the device (UserDefaults).</p>
+
+    <h2>Tracking</h2>
+    <p>eNany does not track you across apps or websites and does not use advertising identifiers.</p>
+
+    <h2>Third parties</h2>
+    <p>eNany does not sell data and does not share app data with third-party analytics or advertising SDKs.</p>
+
+    <h2>Children</h2>
+    <p>The app is for parents watching over a sleeping child. It does not collect children’s personal data and does not send it to the developer.</p>
+
+    <h2>Contact</h2>
+    <p>Privacy questions:<br />
+    <strong>Jan Kalina</strong><br />
+    E-mail: <a href="mailto:kalinajan93@icloud.com">kalinajan93@icloud.com</a></p>
+    <p><a href="index.html?lang=en">Back to Support</a></p>
+  </div>
+
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search).get("lang");
+      var lang = (q === "en" || q === "cs") ? q
+        : ((navigator.language || "cs").toLowerCase().indexOf("en") === 0 ? "en" : "cs");
+      document.documentElement.lang = lang;
+      document.documentElement.setAttribute("data-ui", lang);
+      document.querySelectorAll("[data-switch]").forEach(function (a) {
+        a.classList.toggle("active", a.getAttribute("data-switch") === lang);
+      });
+    })();
+  </script>
 </body>
 </html>
