@@ -2,11 +2,20 @@ import Foundation
 
 enum L10n {
     static func t(_ key: String) -> String {
-        String(localized: String.LocalizationValue(stringLiteral: key))
+        localizationBundle().localizedString(forKey: key, value: nil, table: "Localizable")
     }
 
     static func format(_ key: String, _ arguments: CVarArg...) -> String {
-        String(format: t(key), locale: .current, arguments: arguments)
+        String(format: t(key), locale: AppLanguage.stored.resolvedLocale, arguments: arguments)
+    }
+
+    private static func localizationBundle() -> Bundle {
+        let code = AppLanguage.stored.resolvedLanguageCode
+        if let path = Bundle.main.path(forResource: code, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return bundle
+        }
+        return .main
     }
 
     enum Common {
@@ -95,6 +104,9 @@ enum L10n {
         static func pinHelp(_ appName: String) -> String { format("settings.pinHelp", appName) }
         static var about: String { t("settings.about") }
         static var version: String { t("settings.version") }
+        static var language: String { t("settings.language") }
+        static var languageSystem: String { t("settings.languageSystem") }
+        static var languageHelp: String { t("settings.languageHelp") }
     }
 
     enum Auth {

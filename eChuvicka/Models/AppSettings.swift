@@ -1,6 +1,44 @@
 import Foundation
 import Combine
 
+public enum AppLanguage: String, CaseIterable, Identifiable {
+    case system
+    case czech = "cs"
+    case english = "en"
+
+    public var id: String { rawValue }
+
+    static let storageKey = "appLanguage"
+
+    /// `nil` means follow the device language (cs / en in the app).
+    var resolvedLanguageCode: String {
+        switch self {
+        case .czech:
+            return "cs"
+        case .english:
+            return "en"
+        case .system:
+            let preferred = Locale.preferredLanguages.first?.lowercased() ?? "cs"
+            return preferred.hasPrefix("en") ? "en" : "cs"
+        }
+    }
+
+    var resolvedLocale: Locale {
+        switch self {
+        case .system:
+            return .autoupdatingCurrent
+        case .czech:
+            return Locale(identifier: "cs")
+        case .english:
+            return Locale(identifier: "en")
+        }
+    }
+
+    static var stored: AppLanguage {
+        AppLanguage(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .system
+    }
+}
+
 @MainActor
 public class AppSettings: ObservableObject {
     private let defaults: UserDefaults
@@ -39,6 +77,17 @@ public class AppSettings: ObservableObject {
     @Published public var deviceName: String {
         didSet { defaults.set(deviceName, forKey: Keys.deviceName) }
     }
+    @Published public var appLanguage: AppLanguage {
+        didSet {
+            if appLanguage == .system {
+                defaults.removeObject(forKey: Keys.appLanguage)
+            } else {
+                defaults.set(appLanguage.rawValue, forKey: Keys.appLanguage)
+            }
+        }
+    }
+
+    public var resolvedLocale: Locale { appLanguage.resolvedLocale }
     
     @Published public var stableDeviceId: String {
         didSet { defaults.set(stableDeviceId, forKey: Keys.stableDeviceId) }
@@ -70,6 +119,7 @@ public class AppSettings: ObservableObject {
         static let isAutoReconnectEnabled = "isAutoReconnectEnabled"
         static let isPinRequired = "isPinRequired"
         static let deviceName = "deviceName"
+        static let appLanguage = AppLanguage.storageKey
         static let stableDeviceId = "stableDeviceId"
         static let hostedPairingPIN = "hostedPairingPIN"
         static let lastConnectedDeviceId = "lastConnectedDeviceId"
@@ -95,6 +145,7 @@ public class AppSettings: ObservableObject {
         self.isAutoReconnectEnabled = defaults.object(forKey: Keys.isAutoReconnectEnabled) as? Bool ?? true
         self.isPinRequired = defaults.object(forKey: Keys.isPinRequired) as? Bool ?? true
         self.deviceName = defaults.string(forKey: Keys.deviceName) ?? ""
+        self.appLanguage = AppLanguage(rawValue: defaults.string(forKey: Keys.appLanguage) ?? "") ?? .system
         self.stableDeviceId = defaults.string(forKey: Keys.stableDeviceId) ?? ""
         self.hostedPairingPIN = defaults.string(forKey: Keys.hostedPairingPIN) ?? ""
         self.lastConnectedDeviceId = defaults.string(forKey: Keys.lastConnectedDeviceId) ?? ""

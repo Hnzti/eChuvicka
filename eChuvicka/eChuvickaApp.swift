@@ -4,11 +4,9 @@ import UIKit
 #endif
 
 enum AppBrand {
-    /// Home Screen / in-app name: eChůvička (cs), eNany (en).
+    /// In-app name follows the language setting: eChůvička (cs), eNany (en).
     static var displayName: String {
-        let name = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
-        if let name, !name.isEmpty { return name }
-        return "eChůvička"
+        AppLanguage.stored.resolvedLanguageCode == "en" ? "eNany" : "eChůvička"
     }
 }
 
@@ -43,6 +41,7 @@ struct eChuvickaApp: App {
 }
 
 #if os(iOS)
+@MainActor
 enum ScreenSleepPolicy {
     /// App must never block Auto-Lock; locking is entirely up to iOS.
     static func allowSystemAutoLock() {
@@ -53,6 +52,7 @@ enum ScreenSleepPolicy {
 
 struct ContentView: View {
     @EnvironmentObject var coordinator: SessionCoordinator
+    @EnvironmentObject var settings: AppSettings
     
     var body: some View {
         NavigationStack {
@@ -71,5 +71,6 @@ struct ContentView: View {
             }
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: coordinator.role)
         }
+        .environment(\.locale, settings.resolvedLocale)
     }
 }

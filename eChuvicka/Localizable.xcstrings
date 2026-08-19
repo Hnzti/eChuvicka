@@ -1,1302 +1,1378 @@
 {
-  "sourceLanguage": "cs",
-  "strings": {
-    "common.back": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zpět"
+  "sourceLanguage" : "cs",
+  "strings" : {
+    "" : {
+
+    },
+    "%lld %%" : {
+
+    },
+    "%lld s" : {
+
+    },
+    "•" : {
+
+    },
+    "© %lld %@" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "© %1$lld %2$@"
+          }
+        }
+      }
+    },
+    "auth.failed" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ověření se nezdařilo"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication failed"
+          }
+        }
+      }
+    },
+    "auth.invalidPin" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neplatný PIN"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid PIN"
           }
         }
       }
     },
-    "common.done": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hotovo"
+    "Čeština" : {
+
+    },
+    "child.lockHint" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro zhasnutí displeje zamkněte zařízení bočním tlačítkem. Mikrofon a přenos běží dál na pozadí — usínání řídí systém."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To turn off the display, lock the device with the side button. The microphone and transfer keep running in the background — sleep is managed by the system."
+          }
+        }
+      }
+    },
+    "child.micOn" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MIKROFON JE ZAPNUTÝ"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MICROPHONE IS ON"
           }
         }
       }
     },
-    "common.settings": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nastavení"
+    "child.openConnection" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otevřené spojení (bez PINu)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open connection (no PIN)"
           }
         }
       }
     },
-    "common.searching": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vyhledávání..."
+    "child.pairingPin" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Párovací PIN kód"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Searching..."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing PIN"
           }
         }
       }
     },
-    "common.connecting": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Připojuji…"
+    "child.parentSpeaking" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rodič mluví..."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connecting…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parent is speaking..."
           }
         }
       }
     },
-    "role.child": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dítě"
+    "child.transmitting" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PŘENÁŠÍ ZVUK K RODIČI!"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Baby"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SENDING AUDIO TO PARENT!"
           }
         }
       }
     },
-    "role.parent": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rodič"
+    "child.waiting" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čekání na spojení..."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parent"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for connection..."
           }
         }
       }
     },
-    "role.child.subtitle": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vysílač zvuku"
+    "common.back" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zpět"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sound transmitter"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
           }
         }
       }
     },
-    "role.parent.subtitle": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Přijímač zvuku"
+    "common.connecting" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Připojuji…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sound receiver"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting…"
           }
         }
       }
     },
-    "device.default.child": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dětská jednotka"
+    "common.done" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hotovo"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Baby unit"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
           }
         }
       }
     },
-    "device.default.parent": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rodičovská jednotka"
+    "common.searching" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyhledávání..."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parent unit"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching..."
           }
         }
       }
     },
-    "connection.disconnected": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odpojeno"
+    "common.settings" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nastavení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disconnected"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         }
       }
     },
-    "connection.searching": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vyhledávání..."
+    "connection.a11y.latency" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "odezva %d milisekund"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Searching..."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "latency %d milliseconds"
           }
         }
       }
     },
-    "connection.wifi": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokální síť (Wi‑Fi)"
+    "connection.a11y.signal" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "signál %d dBm"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Local network (Wi‑Fi)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "signal %d dBm"
           }
         }
       }
     },
-    "connection.p2p": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Přímé spojení (P2P)"
+    "connection.disconnected" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpojeno"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Direct connection (P2P)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
           }
         }
       }
     },
-    "connection.latency": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odezva: %d ms"
+    "connection.latency" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odezva: %d ms"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Latency: %d ms"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Latency: %d ms"
           }
         }
       }
     },
-    "connection.signal": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signál: %d dBm"
+    "connection.p2p" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přímé spojení (P2P)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Signal: %d dBm"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct connection (P2P)"
           }
         }
       }
     },
-    "connection.a11y.latency": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "odezva %d milisekund"
+    "connection.searching" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyhledávání..."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "latency %d milliseconds"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching..."
           }
         }
       }
     },
-    "connection.a11y.signal": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "signál %d dBm"
+    "connection.signal" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signál: %d dBm"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "signal %d dBm"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signal: %d dBm"
           }
         }
       }
     },
-    "child.pairingPin": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Párovací PIN kód"
+    "connection.wifi" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokální síť (Wi‑Fi)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pairing PIN"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local network (Wi‑Fi)"
           }
         }
       }
     },
-    "child.openConnection": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Otevřené spojení (bez PINu)"
+    "device.default.child" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dětská jednotka"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open connection (no PIN)"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baby unit"
           }
         }
       }
+    },
+    "device.default.parent" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rodičovská jednotka"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parent unit"
+          }
+        }
+      }
+    },
+    "English" : {
+
     },
-    "child.transmitting": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PŘENÁŠÍ ZVUK K RODIČI!"
+    "hint.attemptP2P" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokus %d: přímé spojení — Wi‑Fi zapnuté stačí, router ne…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SENDING AUDIO TO PARENT!"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attempt %d: direct connection — Wi‑Fi on is enough, no router needed…"
           }
         }
       }
     },
-    "child.micOn": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MIKROFON JE ZAPNUTÝ"
+    "hint.connecting" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Připojuji k %@…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MICROPHONE IS ON"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to %@…"
           }
         }
       }
     },
-    "child.parentSpeaking": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rodič mluví..."
+    "hint.connectionFailed" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spojení selhalo. Zkontrolujte, že jsou obě zařízení blízko a Wi‑Fi zapnuté."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parent is speaking..."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection failed. Make sure both devices are nearby with Wi‑Fi turned on."
           }
         }
       }
     },
-    "child.waiting": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Čekání na spojení..."
+    "hint.connectTimeout" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Připojení vypršelo — zkouším znovu (P2P)…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Waiting for connection..."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection timed out — retrying (P2P)…"
           }
         }
       }
     },
-    "child.lockHint": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pro zhasnutí displeje zamkněte zařízení bočním tlačítkem. Mikrofon a přenos běží dál na pozadí — usínání řídí systém."
+    "hint.interrupted" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spojení přerušeno — obnovuji…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To turn off the display, lock the device with the side button. The microphone and transfer keep running in the background — sleep is managed by the system."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection interrupted — restoring…"
           }
         }
       }
     },
-    "parent.backToList": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zpět na seznam"
+    "hint.lookingP2PNoRouter" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hledám přímé spojení (P2P) — router není potřeba…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back to list"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for a direct connection (P2P) — no router needed…"
           }
         }
       }
     },
-    "parent.enterPin": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zadejte PIN pro %@"
+    "hint.lookingWifiP2P" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hledám spojení (Wi‑Fi / P2P)…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter PIN for %@"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for a connection (Wi‑Fi / P2P)…"
           }
         }
       }
     },
-    "parent.wrongPin": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nesprávný PIN, zkuste to znovu."
+    "hint.networkChangedRestore" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Síť se změnila — obnovuji spojení…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Incorrect PIN, try again."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network changed — restoring connection…"
           }
         }
       }
     },
-    "parent.selectChild": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vyberte dětskou jednotku"
+    "hint.networkChangedRetry" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Síť se změnila — zkouším znovu (P2P / Wi‑Fi)…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Select a baby unit"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network changed — retrying (P2P / Wi‑Fi)…"
           }
         }
       }
     },
-    "parent.reconnecting": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Znovupřipojování..."
+    "hint.restoring" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovuji spojení…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reconnecting..."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restoring connection…"
           }
         }
       }
     },
-    "parent.p2pHint": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Přímé spojení (P2P) nepotřebuje router — stačí zapnuté Wi‑Fi na obou zařízeních"
+    "hint.searchingBabyP2P" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyhledávám dětskou jednotku (P2P)…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Direct (P2P) connection does not need a router — Wi‑Fi on both devices is enough"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching for the baby unit (P2P)…"
           }
         }
       }
     },
-    "parent.restoringLast": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obnovuji spojení s poslední jednotkou…"
+    "hint.waitingP2P" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Čekám na přímé spojení (P2P)…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restoring connection to the last unit…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for a direct connection (P2P)…"
           }
         }
       }
     },
-    "parent.tapDirect": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Klepněte pro přímé připojení"
+    "parent.babyBattery" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baterie dítěte: %d %%"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tap to connect"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baby battery: %d%%"
           }
         }
       }
     },
-    "parent.trusted24h": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Důvěryhodné 24 h — připojit bez PINu"
+    "parent.backToList" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zpět na seznam"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trusted for 24 h — connect without PIN"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to list"
           }
         }
       }
     },
-    "parent.tapPin": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Klepněte pro zadání PINu"
+    "parent.enterPin" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zadejte PIN pro %@"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tap to enter PIN"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter PIN for %@"
           }
         }
       }
     },
-    "parent.lostBang": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spojení ztraceno!"
+    "parent.holdToTalk" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podržte pro mluvení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection lost!"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold to talk"
           }
         }
       }
     },
-    "parent.lost": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spojení ztraceno"
+    "parent.listening" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NASLOUCHÁ"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection lost"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LISTENING"
           }
         }
       }
     },
-    "parent.lowBattery": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dítě má vybitou baterii!"
+    "parent.lost" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spojení ztraceno"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Baby unit battery is low!"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection lost"
           }
         }
       }
     },
-    "parent.speaking": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MLUVÍTE K DÍTĚTI"
+    "parent.lostBang" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spojení ztraceno!"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "SPEAKING TO BABY"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection lost!"
           }
         }
       }
     },
-    "parent.receiving": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PŘIJÍMÁ ZVUK OD DÍTĚTE!"
+    "parent.lowBattery" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dítě má vybitou baterii!"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RECEIVING AUDIO FROM BABY!"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baby unit battery is low!"
           }
         }
       }
     },
-    "parent.listening": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "NASLOUCHÁ"
+    "parent.p2pHint" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přímé spojení (P2P) nepotřebuje router — stačí zapnuté Wi‑Fi na obou zařízeních"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LISTENING"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct (P2P) connection does not need a router — Wi‑Fi on both devices is enough"
           }
         }
       }
     },
-    "parent.restoring": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obnovování spojení..."
+    "parent.receiving" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PŘIJÍMÁ ZVUK OD DÍTĚTE!"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restoring connection..."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RECEIVING AUDIO FROM BABY!"
           }
         }
       }
     },
-    "parent.babyBattery": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Baterie dítěte: %d %%"
+    "parent.reconnecting" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Znovupřipojování..."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Baby battery: %d%%"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnecting..."
           }
         }
       }
     },
-    "parent.holdToTalk": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Podržte pro mluvení"
+    "parent.restoring" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovování spojení..."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hold to talk"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restoring connection..."
           }
         }
       }
     },
-    "settings.title": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nastavení"
+    "parent.restoringLast" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovuji spojení s poslední jednotkou…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restoring connection to the last unit…"
           }
         }
       }
     },
-    "settings.device": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zařízení"
+    "parent.selectChild" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyberte dětskou jednotku"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Device"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a baby unit"
           }
         }
       }
     },
-    "settings.deviceName": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Název zařízení"
+    "parent.speaking" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MLUVÍTE K DÍTĚTI"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Device name"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SPEAKING TO BABY"
           }
         }
       }
     },
-    "settings.audio": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Přenos zvuku"
+    "parent.tapDirect" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klepněte pro přímé připojení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to connect"
           }
         }
       }
     },
-    "settings.vox": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VOX"
+    "parent.tapPin" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klepněte pro zadání PINu"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VOX"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to enter PIN"
           }
         }
       }
     },
-    "settings.voxHelp": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VOX spustí přenos zvuku jen při detekci hluku. Když je vypnutý, dětská jednotka vysílá nepřetržitě."
+    "parent.trusted24h" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Důvěryhodné 24 h — připojit bez PINu"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VOX starts audio only when noise is detected. When off, the baby unit transmits continuously."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trusted for 24 h — connect without PIN"
           }
         }
       }
     },
-    "settings.sensitivity": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Citlivost"
+    "parent.wrongPin" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nesprávný PIN, zkuste to znovu."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sensitivity"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incorrect PIN, try again."
           }
         }
       }
     },
-    "settings.holdAfterDetection": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doba vysílání po detekci"
+    "role.child" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dítě"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Transmit hold after detection"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baby"
           }
         }
       }
     },
-    "settings.alerts": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Upozornění a spojení"
+    "role.child.subtitle" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vysílač zvuku"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alerts and connection"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound transmitter"
           }
         }
       }
     },
-    "settings.disconnectAlarm": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alarm při ztrátě spojení"
+    "role.parent" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rodič"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alarm on connection loss"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parent"
           }
         }
       }
     },
-    "settings.alarmDelay": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prodleva alarmu"
+    "role.parent.subtitle" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přijímač zvuku"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alarm delay"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound receiver"
           }
         }
       }
     },
-    "settings.disconnectAlarmHelp": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Po výpadku dat po zvolené době se ozve zvukový alarm a červený pruh na rodičovské jednotce."
+    "settings.about" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O aplikaci"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "After data is lost for the selected time, the parent unit plays an alarm and shows a red banner."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
           }
         }
       }
     },
-    "settings.lowBatteryAlert": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Varování při nízké baterii dítěte"
+    "settings.alarmDelay" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prodleva alarmu"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Low baby-battery warning"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarm delay"
           }
         }
       }
     },
-    "settings.batteryThreshold": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Práh baterie"
+    "settings.alerts" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upozornění a spojení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Battery threshold"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerts and connection"
           }
         }
       }
     },
-    "settings.lowBatteryHelp": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pod prahem se na rodiči zobrazí varování a občas zazní upozornění. iOS hlásí baterii jen po cca 5 %."
+    "settings.audio" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Přenos zvuku"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Below the threshold the parent shows a warning and occasional alerts. iOS reports battery in about 5% steps."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
           }
         }
       }
     },
-    "settings.autoReconnect": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obnovit spojení automaticky"
+    "settings.autoReconnect" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovit spojení automaticky"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reconnect automatically"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect automatically"
           }
         }
       }
     },
-    "settings.autoReconnectHelp": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "První připojení je vždy ze seznamu (+ PIN). Po výpadku do 24 h se rodič sám znovu připojí ke stejnému zařízení bez PINu. PIN dítěte zůstává stejný i po restartu appky, aby důvěra 24 h fungovala."
+    "settings.autoReconnectHelp" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "První připojení je vždy ze seznamu (+ PIN). Po výpadku do 24 h se rodič sám znovu připojí ke stejnému zařízení bez PINu. PIN dítěte zůstává stejný i po restartu appky, aby důvěra 24 h fungovala."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The first connection is always from the list (+ PIN). After a drop within 24 hours, the parent reconnects to the same device without a PIN. The baby PIN stays the same after an app restart so 24-hour trust still works."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first connection is always from the list (+ PIN). After a drop within 24 hours, the parent reconnects to the same device without a PIN. The baby PIN stays the same after an app restart so 24-hour trust still works."
           }
         }
       }
     },
-    "settings.security": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zabezpečení"
+    "settings.batteryThreshold" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Práh baterie"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Security"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Battery threshold"
           }
         }
       }
     },
-    "settings.requirePin": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vyžadovat párovací PIN"
+    "settings.device" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zařízení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Require pairing PIN"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device"
           }
         }
       }
     },
-    "settings.pinHelp": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nastavení se ukládá v zařízení. Bez PINu se na stejné síti může připojit kdokoliv s aplikací %@. Rodič toto nastavení nepřepisuje."
+    "settings.deviceName" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Název zařízení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This setting is stored on this device. Without a PIN, anyone with %@ on the same network can connect. The parent cannot change this."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device name"
           }
         }
       }
     },
-    "settings.about": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O aplikaci"
+    "settings.disconnectAlarm" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarm při ztrátě spojení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "About"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarm on connection loss"
           }
         }
       }
     },
-    "settings.version": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verze aplikace"
+    "settings.disconnectAlarmHelp" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Po výpadku dat po zvolené době se ozve zvukový alarm a červený pruh na rodičovské jednotce."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "App version"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After data is lost for the selected time, the parent unit plays an alarm and shows a red banner."
           }
         }
       }
     },
-    "auth.invalidPin": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Neplatný PIN"
+    "settings.holdAfterDetection" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doba vysílání po detekci"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invalid PIN"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transmit hold after detection"
           }
         }
       }
     },
-    "auth.failed": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ověření se nezdařilo"
+    "settings.language" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jazyk"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Authentication failed"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
           }
         }
       }
     },
-    "hint.networkChangedRestore": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Síť se změnila — obnovuji spojení…"
+    "settings.languageHelp" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bez změny se bere jazyk ze systému. Tady ho můžeš nastavit ručně."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Network changed — restoring connection…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By default the app follows the system language. You can override it here."
           }
         }
       }
     },
-    "hint.connecting": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Připojuji k %@…"
+    "settings.languageSystem" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podle systému"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connecting to %@…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
           }
         }
       }
     },
-    "hint.connectTimeout": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Připojení vypršelo — zkouším znovu (P2P)…"
+    "settings.lowBatteryAlert" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varování při nízké baterii dítěte"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection timed out — retrying (P2P)…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low baby-battery warning"
           }
         }
       }
     },
-    "hint.waitingP2P": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Čekám na přímé spojení (P2P)…"
+    "settings.lowBatteryHelp" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pod prahem se na rodiči zobrazí varování a občas zazní upozornění. iOS hlásí baterii jen po cca 5 %."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Waiting for a direct connection (P2P)…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Below the threshold the parent shows a warning and occasional alerts. iOS reports battery in about 5% steps."
           }
         }
       }
     },
-    "hint.networkChangedRetry": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Síť se změnila — zkouším znovu (P2P / Wi‑Fi)…"
+    "settings.pinHelp" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nastavení se ukládá v zařízení. Bez PINu se na stejné síti může připojit kdokoliv s aplikací %@. Rodič toto nastavení nepřepisuje."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Network changed — retrying (P2P / Wi‑Fi)…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This setting is stored on this device. Without a PIN, anyone with %@ on the same network can connect. The parent cannot change this."
           }
         }
       }
     },
-    "hint.connectionFailed": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spojení selhalo. Zkontrolujte, že jsou obě zařízení blízko a Wi‑Fi zapnuté."
+    "settings.requirePin" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vyžadovat párovací PIN"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection failed. Make sure both devices are nearby with Wi‑Fi turned on."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Require pairing PIN"
           }
         }
       }
     },
-    "hint.lookingWifiP2P": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hledám spojení (Wi‑Fi / P2P)…"
+    "settings.security" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zabezpečení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Looking for a connection (Wi‑Fi / P2P)…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Security"
           }
         }
       }
     },
-    "hint.lookingP2PNoRouter": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hledám přímé spojení (P2P) — router není potřeba…"
+    "settings.sensitivity" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citlivost"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Looking for a direct connection (P2P) — no router needed…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensitivity"
           }
         }
       }
     },
-    "hint.restoring": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obnovuji spojení…"
+    "settings.title" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nastavení"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restoring connection…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         }
       }
     },
-    "hint.interrupted": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spojení přerušeno — obnovuji…"
+    "settings.version" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verze aplikace"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection interrupted — restoring…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App version"
           }
         }
       }
     },
-    "hint.searchingBabyP2P": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vyhledávám dětskou jednotku (P2P)…"
+    "settings.vox" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOX"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Searching for the baby unit (P2P)…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOX"
           }
         }
       }
     },
-    "hint.attemptP2P": {
-      "localizations": {
-        "cs": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pokus %d: přímé spojení — Wi‑Fi zapnuté stačí, router ne…"
+    "settings.voxHelp" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOX spustí přenos zvuku jen při detekci hluku. Když je vypnutý, dětská jednotka vysílá nepřetržitě."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Attempt %d: direct connection — Wi‑Fi on is enough, no router needed…"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOX starts audio only when noise is detected. When off, the baby unit transmits continuously."
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

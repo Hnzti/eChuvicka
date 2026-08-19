@@ -1,5 +1,5 @@
 import Foundation
-import AVFoundation
+@preconcurrency import AVFoundation
 import SwiftUI
 
 @MainActor
@@ -393,8 +393,10 @@ public class AudioManager: ObservableObject {
             object: AVAudioSession.sharedInstance(),
             queue: .main
         ) { [weak self] notification in
+            let typeValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            let optionsValue = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt
             Task { @MainActor in
-                self?.handleInterruption(notification)
+                self?.handleInterruption(typeValue: typeValue, optionsValue: optionsValue)
             }
         }
         center.addObserver(
@@ -408,9 +410,8 @@ public class AudioManager: ObservableObject {
         }
     }
     
-    private func handleInterruption(_ notification: Notification) {
-        guard let info = notification.userInfo,
-              let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+    private func handleInterruption(typeValue: UInt?, optionsValue: UInt?) {
+        guard let typeValue,
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
         
         switch type {
@@ -418,8 +419,7 @@ public class AudioManager: ObservableObject {
             print("[Audio] Interruption began")
         case .ended:
             print("[Audio] Interruption ended")
-            let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
-            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue ?? 0)
             if options.contains(.shouldResume) || isCaptureActive || wantsPlayback || isKeepAliveRunning {
                 resumeAfterAudioDisruption()
             }
@@ -491,24 +491,33 @@ public class AudioManager: ObservableObject {
     
     private func convertBuffer(_ inputBuffer: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
         guard let converter = self.audioConverter else { return nil }
-        
+        let inputFrames = inputBuffer.frameLength
+        guard inputFrames > 0 else { return nil }
+
         let ratio = converter.outputFormat.sampleRate / converter.inputFormat.sampleRate
-        let outputFrameCount = AVAudioFrameCount(Double(inputBuffer.frameLength) * ratio)
-        guard outputFrameCount > 0 else { return nil }
-        
-        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: converter.outputFormat, frameCapacity: outputFrameCount) else { return nil }
-        
+        let estimatedOutput = AVAudioFrameCount(ceil(Double(inputFrames) * ratio))
+        // convert(to:from:) aborts unless capacity >= input frameLength, even when downsampling (48 kHz → 16 kHz).
+        let capacity = max(estimatedOutput, inputFrames)
+        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: converter.outputFormat, frameCapacity: capacity) else {
+            return nil
+        }
+
+        converter.reset()
+        var consumed = false
         var error: NSError?
-        converter.convert(to: outputBuffer, error: &error) { _, outStatus in
+        let status = converter.convert(to: outputBuffer, error: &error) { _, outStatus in
+            if consumed {
+                outStatus.pointee = .noDataNow
+                return nil
+            }
+            consumed = true
             outStatus.pointee = .haveData
             return inputBuffer
         }
-        
-        if let error = error {
-            print("Audio conversion error: \(error)")
+
+        if status == .error || outputBuffer.frameLength == 0 {
             return nil
         }
-        
         return outputBuffer
     }
 }

@@ -37,6 +37,20 @@ struct SettingsView: View {
             } header: {
                 Text(L10n.Settings.device)
             }
+
+            Section {
+                Picker(L10n.Settings.language, selection: $settings.appLanguage) {
+                    Text(L10n.Settings.languageSystem).tag(AppLanguage.system)
+                    Text("Čeština").tag(AppLanguage.czech)
+                    Text("English").tag(AppLanguage.english)
+                }
+
+                Text(L10n.Settings.languageHelp)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } header: {
+                Text(L10n.Settings.language)
+            }
             
             Section {
                 Toggle(L10n.Settings.vox, isOn: $settings.isVOXEnabled)

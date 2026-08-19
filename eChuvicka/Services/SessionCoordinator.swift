@@ -91,6 +91,10 @@ public class SessionCoordinator: ObservableObject {
         heartbeatMonitor.objectWillChange.sink { [weak self] in
             self?.objectWillChange.send()
         }.store(in: &cancellables)
+
+        appSettings.objectWillChange.sink { [weak self] in
+            self?.objectWillChange.send()
+        }.store(in: &cancellables)
         
         networkManager.onAudioDataReceived = { [weak self] data in
             Task { @MainActor in

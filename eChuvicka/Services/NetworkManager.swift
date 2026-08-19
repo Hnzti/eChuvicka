@@ -851,11 +851,11 @@ public class NetworkManager: ObservableObject {
                 return
             }
             
-            let type = headerData[0]
-            let length = Self.u32BigEndian(headerData.subdata(in: 1..<5))
-            
+            let header = headerData
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
+                let type = header[0]
+                let length = Self.u32BigEndian(header.subdata(in: 1..<5))
                 if length == 0 || length > self.maxPayloadLength {
                     #if DEBUG
                     print("[Receive] Invalid payload length \(length) — disconnect")
