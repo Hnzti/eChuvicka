@@ -406,13 +406,13 @@
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pro zhasnutí displeje zamkněte iPhone bočním tlačítkem. Mikrofon a přenos běží dál na pozadí — usínání řídí systém."
+            "value": "Pro zhasnutí displeje zamkněte zařízení bočním tlačítkem. Mikrofon a přenos běží dál na pozadí — usínání řídí systém."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "To turn off the display, lock iPhone with the side button. The microphone and transfer keep running in the background — sleep is managed by the system."
+            "value": "To turn off the display, lock the device with the side button. The microphone and transfer keep running in the background — sleep is managed by the system."
           }
         }
       }

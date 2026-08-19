@@ -257,7 +257,9 @@ public class NetworkManager: ObservableObject {
     public func refreshAdvertisedDeviceName() {
         guard let listener = listener, !hostedPairingPart.isEmpty else { return }
         listener.service = makeAdvertisedService()
+        #if DEBUG
         print("[Child] Re-advertising as \(advertisedInstanceName())")
+        #endif
     }
     
     public func updatePinRequirement(_ isPinRequired: Bool) {
@@ -275,7 +277,9 @@ public class NetworkManager: ObservableObject {
             generatedPIN = pin
         }
         listener?.service = makeAdvertisedService()
+        #if DEBUG
         print("[Child] PIN requirement updated, advertising as \(advertisedInstanceName())")
+        #endif
     }
     
     public func startHosting(isPinRequired: Bool, deviceId: String, pairingPIN: String) {
@@ -310,7 +314,9 @@ public class NetworkManager: ObservableObject {
             let nwListener = try NWListener(using: params)
             hostedPairingPart = (isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-") + pairingPIN
             nwListener.service = makeAdvertisedService()
+            #if DEBUG
             print("[Child] Advertising as \(advertisedInstanceName()) id=\(deviceId)")
+            #endif
             
             nwListener.stateUpdateHandler = { [weak self] state in
                 Task { @MainActor in
@@ -498,7 +504,9 @@ public class NetworkManager: ObservableObject {
         localRole = .parent
         lastAuthError = nil
         reconnectHint = L10n.Hint.connecting(to: device.displayName)
+        #if DEBUG
         print("[Parent] Connecting to \(device.displayName) id=\(device.id) service=\(device.name)")
+        #endif
         
         let params = makeTCPParameters()
         // Always resolve by Bonjour service name so we don't reuse a dead hotspot endpoint.
@@ -668,6 +676,11 @@ public class NetworkManager: ObservableObject {
     
     private func handleDisconnect() {
         cancelConnectTimeout()
+        if let conn = connection {
+            conn.stateUpdateHandler = nil
+            conn.pathUpdateHandler = nil
+            conn.cancel()
+        }
         isAuthenticated = false
         isConnected = false
         connectionMode = .disconnected
@@ -732,10 +745,6 @@ public class NetworkManager: ObservableObject {
     }
     
     public func stop() {
-        stop(preservingRole: false)
-    }
-    
-    private func stop(preservingRole: Bool) {
         listener?.cancel()
         listener = nil
         hostedPairingPart = ""
@@ -745,9 +754,14 @@ public class NetworkManager: ObservableObject {
         
         if let conn = connection {
             conn.stateUpdateHandler = nil
+            conn.pathUpdateHandler = nil
             conn.cancel()
         }
         connection = nil
+        
+        cancelConnectTimeout()
+        childHostRestartTask?.cancel()
+        childHostRestartTask = nil
         
         isAuthenticated = false
         isConnected = false
@@ -757,9 +771,7 @@ public class NetworkManager: ObservableObject {
         connectedDeviceId = nil
         lastAuthError = nil
         reconnectHint = nil
-        if !preservingRole {
-            localRole = .none
-        }
+        localRole = .none
     }
     
     // MARK: - Data Transfer
@@ -811,12 +823,21 @@ public class NetworkManager: ObservableObject {
     
     // MARK: - Receive
     
+    private static func u32BigEndian(_ data: Data) -> UInt32 {
+        data.withUnsafeBytes { raw in
+            let b = raw.bindMemory(to: UInt8.self)
+            return (UInt32(b[0]) << 24) | (UInt32(b[1]) << 16) | (UInt32(b[2]) << 8) | UInt32(b[3])
+        }
+    }
+    
     private func startReceiving() {
         guard let connection = connection else { return }
         
         connection.receive(minimumIncompleteLength: 5, maximumLength: 5) { [weak self] headerData, _, isComplete, error in
             if let error = error {
+                #if DEBUG
                 print("[Receive] Header error: \(error)")
+                #endif
                 Task { @MainActor in self?.handleDisconnect() }
                 return
             }
@@ -824,25 +845,30 @@ public class NetworkManager: ObservableObject {
             guard let headerData = headerData, headerData.count == 5 else {
                 if isComplete {
                     Task { @MainActor in self?.handleDisconnect() }
+                } else {
+                    Task { @MainActor in self?.startReceiving() }
                 }
                 return
             }
             
             let type = headerData[0]
-            let lengthData = headerData.subdata(in: 1..<5)
-            let length = UInt32(bigEndian: lengthData.withUnsafeBytes { $0.load(as: UInt32.self) })
+            let length = Self.u32BigEndian(headerData.subdata(in: 1..<5))
             
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
                 if length == 0 || length > self.maxPayloadLength {
+                    #if DEBUG
                     print("[Receive] Invalid payload length \(length) — disconnect")
+                    #endif
                     self.handleDisconnect()
                     return
                 }
                 
-                connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { [weak self] payloadData, _, _, error2 in
+                connection.receive(minimumIncompleteLength: Int(length), maximumLength: Int(length)) { [weak self] payloadData, _, payloadComplete, error2 in
                     if let error2 = error2 {
+                        #if DEBUG
                         print("[Receive] Payload error: \(error2)")
+                        #endif
                         Task { @MainActor in self?.handleDisconnect() }
                         return
                     }
@@ -851,7 +877,11 @@ public class NetworkManager: ObservableObject {
                         if let payloadData = payloadData {
                             self?.dispatchPayload(type: type, data: payloadData)
                         }
-                        self?.startReceiving()
+                        if payloadComplete {
+                            self?.handleDisconnect()
+                        } else {
+                            self?.startReceiving()
+                        }
                     }
                 }
             }

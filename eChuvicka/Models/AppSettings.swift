@@ -120,12 +120,6 @@ public class AppSettings: ObservableObject {
         return pin
     }
     
-    public func regenerateHostedPIN() -> String {
-        let pin = String(format: "%04d", Int.random(in: 0...9999))
-        hostedPairingPIN = pin
-        return pin
-    }
-    
     public func rememberSuccessfulConnection(deviceId: String, pin: String) {
         lastConnectedDeviceId = deviceId
         lastConnectedPIN = pin

@@ -165,6 +165,7 @@ public class SessionCoordinator: ObservableObject {
             Task { @MainActor in
                 guard let self = self else { return }
                 if connected {
+                    self.ignoreNextDisconnectForReconnect = false
                     self.hadLiveConnection = true
                     self.isAwaitingDropReconnect = false
                     self.reconnectCooldownSeconds = 5
@@ -399,10 +400,8 @@ public class SessionCoordinator: ObservableObject {
         networkManager.stop()
         audioManager.shutdown()
         heartbeatMonitor.stop()
-    }
-    
-    private func scheduleReconnectBrowse(delay: TimeInterval? = nil) {
-        startReconnectLoop(initialDelay: delay ?? reconnectCooldownSeconds)
+        parentSpeakingTimer?.invalidate()
+        parentSpeakingTimer = nil
     }
     
     /// Keep re-browsing until connected again (needed after Mac leaves iPhone hotspot → AWDL).
@@ -435,7 +434,7 @@ public class SessionCoordinator: ObservableObject {
         }
     }
     
-    /// Prefer stable device id; fall back to PIN / single discovered child after hotspot→P2P.
+    /// Prefer stable device id, then last PIN. Never fall back to “the only device on the LAN”.
     private func resolveReconnectTarget(in devices: [DiscoveredDevice]) -> DiscoveredDevice? {
         let lastId = appSettings.lastConnectedDeviceId
         if !lastId.isEmpty, let match = devices.first(where: { $0.id == lastId }) {
@@ -444,9 +443,6 @@ public class SessionCoordinator: ObservableObject {
         let lastPIN = appSettings.lastConnectedPIN
         if !lastPIN.isEmpty, let match = devices.first(where: { $0.pairingPIN == lastPIN }) {
             return match
-        }
-        if devices.count == 1 {
-            return devices.first
         }
         return nil
     }

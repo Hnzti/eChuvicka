@@ -336,7 +336,12 @@ public class AudioManager: ObservableObject {
         #if os(iOS)
         isKeepAliveRunning = false
         keepAliveNode.stop()
-        keepAliveEngine?.stop()
+        if let engine = keepAliveEngine {
+            if keepAliveNode.engine === engine {
+                engine.detach(keepAliveNode)
+            }
+            engine.stop()
+        }
         keepAliveEngine = nil
         #endif
     }
@@ -473,7 +478,12 @@ public class AudioManager: ObservableObject {
     
     private func stopPlaybackEngineOnly() {
         playerNode.stop()
-        playbackEngine?.stop()
+        if let engine = playbackEngine {
+            if playerNode.engine === engine {
+                engine.detach(playerNode)
+            }
+            engine.stop()
+        }
         playbackEngine = nil
     }
     
