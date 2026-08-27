@@ -3,75 +3,60 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>eChůvička / eNany — Support</title>
+  <title>eChůvička / eNany — Podpora</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; line-height: 1.5; color: #111; }
     a { color: #3d4fd6; }
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.15rem; margin-top: 1.6rem; }
-    .lang { display: flex; gap: 12px; margin-bottom: 1.6rem; font-size: 0.95rem; }
-    .lang a { color: #666; text-decoration: none; }
-    .lang a.active { color: #111; font-weight: 600; }
-    [data-lang] { display: none; }
-    html[data-ui="cs"] [data-lang="cs"],
-    html[data-ui="en"] [data-lang="en"] { display: block; }
+    .lang { display: flex; gap: 16px; margin-bottom: 1.6rem; font-size: 0.95rem; }
+    hr { border: 0; border-top: 1px solid #ddd; margin: 2.4rem 0; }
   </style>
 </head>
 <body>
   <nav class="lang">
-    <a href="?lang=cs" data-switch="cs">Česky</a>
-    <a href="?lang=en" data-switch="en">English</a>
+    <a href="#cs">Česky</a>
+    <a href="#en">English</a>
   </nav>
 
-  <div data-lang="cs">
+  <section id="cs">
     <h1>eChůvička — Podpora</h1>
     <p>eChůvička (v angličtině <strong>eNany</strong>) je nativní chůvička pro iPhone, iPad a Mac. Přenáší obousměrný zvuk bez internetu — přes Wi‑Fi router nebo přímé spojení mezi zařízeními.</p>
+    <p><strong>Potřebujete dvě zařízení Apple</strong> na stejné Wi‑Fi (nebo v dosahu P2P).</p>
 
     <h2>Jak začít</h2>
     <ol>
-      <li>Na jednom zařízení zvolte <strong>Dítě</strong> (vysílač u miminka).</li>
-      <li>Na druhém zvolte <strong>Rodič</strong> a vyberte dětskou jednotku ze seznamu.</li>
-      <li>Pokud je zapnutý PIN, zadejte kód zobrazený na dětském zařízení.</li>
-      <li>Obě zařízení musí být na stejné Wi‑Fi, nebo v dosahu pro přímé P2P.</li>
+      <li>Na zařízení u miminka zvolte <strong>Dítě</strong>.</li>
+      <li>Na svém zařízení zvolte <strong>Rodič</strong> a vyberte dětskou jednotku.</li>
+      <li>Pokud je zapnutý PIN, opsaný kód z dětské jednotky spojení odemkne.</li>
     </ol>
 
     <p>Podpora a chyby:<br />
     <a href="https://github.com/Hnzti/eChuvicka/issues">github.com/Hnzti/eChuvicka/issues</a></p>
     <p><strong>Jan Kalina</strong><br />
     E-mail: <a href="mailto:kalinajan93@icloud.com">kalinajan93@icloud.com</a></p>
-    <p><a href="privacy.html?lang=cs">Zásady ochrany soukromí</a></p>
-  </div>
+    <p><a href="privacy.html#cs">Zásady ochrany soukromí</a></p>
+  </section>
 
-  <div data-lang="en">
+  <hr />
+
+  <section id="en" lang="en">
     <h1>eNany — Support</h1>
     <p>eNany (Czech name <strong>eChůvička</strong>) is a native baby monitor for iPhone, iPad and Mac. It sends two-way audio without the internet — over a Wi‑Fi router or a direct device-to-device link.</p>
+    <p><strong>You need two Apple devices</strong> on the same Wi‑Fi (or in P2P range).</p>
 
     <h2>Get started</h2>
     <ol>
-      <li>On one device choose <strong>Baby</strong> (the transmitter by the infant).</li>
-      <li>On the other choose <strong>Parent</strong> and select the baby unit from the list.</li>
-      <li>If a PIN is on, enter the code shown on the baby device.</li>
-      <li>Both devices must be on the same Wi‑Fi, or in range for a direct P2P link.</li>
+      <li>On the device by the baby, choose <strong>Baby</strong>.</li>
+      <li>On your device, choose <strong>Parent</strong> and select the baby unit.</li>
+      <li>If a PIN is on, enter the code shown on the baby unit.</li>
     </ol>
 
     <p>Support and bugs:<br />
     <a href="https://github.com/Hnzti/eChuvicka/issues">github.com/Hnzti/eChuvicka/issues</a></p>
     <p><strong>Jan Kalina</strong><br />
     E-mail: <a href="mailto:kalinajan93@icloud.com">kalinajan93@icloud.com</a></p>
-    <p><a href="privacy.html?lang=en">Privacy Policy</a></p>
-  </div>
-
-  <script>
-    (function () {
-      var q = new URLSearchParams(location.search).get("lang");
-      var lang = (q === "en" || q === "cs") ? q
-        : ((navigator.language || "cs").toLowerCase().indexOf("en") === 0 ? "en" : "cs");
-      document.documentElement.lang = lang;
-      document.documentElement.setAttribute("data-ui", lang);
-      document.querySelectorAll("[data-switch]").forEach(function (a) {
-        a.classList.toggle("active", a.getAttribute("data-switch") === lang);
-      });
-    })();
-  </script>
+    <p><a href="privacy.html#en">Privacy Policy</a></p>
+  </section>
 </body>
 </html>

@@ -1,14 +1,17 @@
-# eChůvička (iOS, iPadOS, macOS)
+# eChůvička / eNany (iOS, iPadOS, macOS)
 
-Nativní aplikace chůvičky pro Apple zařízení. Přenáší obousměrný zvuk bez nutnosti internetového připojení prostřednictvím lokalního spojení (Wi-Fi Router) a Direct Peer-to-Peer (Wi-Fi Direct / Ad-hoc D2D).
+Nativní audio chůvička pro Apple zařízení. Přenáší obousměrný zvuk bez internetu — po Wi‑Fi routeru nebo přímým P2P spojením mezi zařízeními.
 
 ## Hlavní funkce
-- **Platformy:** Universal SwiftUI pro iPhone, iPad a Mac.
-- **Konektivita:** Dynamické přepínání mezi Router (DRD) a Direct P2P (D2D) podle kvality signálu (latence a ztrátovosti paketů).
-- **Zabezpečení:** Párování a šifrování relace pomocí 6místného PIN kódu (CryptoKit).
-- **Audio:** Nízko-latentní přenos hlasu (AVAudioEngine + Opus/AAC), obousměrný Push-to-Talk pro rodiče.
-- **Úspora baterie:** Podpora detekce zvuku (VOX), provoz se zhasnutou obrazovkou na pozadí (Background Audio/VoIP).
-- **Alerting:** Nastavitelný alarm při ztrátě signálu nebo vybití baterie u dětské jednotky.
+- **Platformy:** SwiftUI pro iPhone, iPad a Mac.
+- **Konektivita:** Wi‑Fi (router / hotspot) nebo přímé P2P (AWDL).
+- **Párování:** 4místný PIN na dětské jednotce. PIN se neinzeruje v názvu Bonjour služby.
+- **Audio:** PCM 16 kHz, obousměrně; rodič mluví podržením tlačítka.
+- **Baterie:** VOX (vysílání při zvuku), běh se zhasnutou obrazovkou (Background Audio).
+- **Upozornění:** alarm při výpadku spojení a při slabé baterii dětské jednotky.
 
-## Repozitář
-- GitHub: [https://github.com/Hnzti/eChuvicka](https://github.com/Hnzti/eChuvicka)
+Zvuk zůstává v místní síti (nesifrované TCP). Aplikace nepoužívá cloud ani účet.
+
+## Podpora
+- https://hnzti.github.io/eChuvicka/
+- Zásady: https://hnzti.github.io/eChuvicka/privacy.html

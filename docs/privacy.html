@@ -9,21 +9,17 @@
     a { color: #3d4fd6; }
     h1 { font-size: 1.6rem; }
     h2 { font-size: 1.15rem; margin-top: 1.6rem; }
-    .lang { display: flex; gap: 12px; margin-bottom: 1.6rem; font-size: 0.95rem; }
-    .lang a { color: #666; text-decoration: none; }
-    .lang a.active { color: #111; font-weight: 600; }
-    [data-lang] { display: none; }
-    html[data-ui="cs"] [data-lang="cs"],
-    html[data-ui="en"] [data-lang="en"] { display: block; }
+    .lang { display: flex; gap: 16px; margin-bottom: 1.6rem; font-size: 0.95rem; }
+    hr { border: 0; border-top: 1px solid #ddd; margin: 2.4rem 0; }
   </style>
 </head>
 <body>
   <nav class="lang">
-    <a href="?lang=cs" data-switch="cs">Česky</a>
-    <a href="?lang=en" data-switch="en">English</a>
+    <a href="#cs">Česky</a>
+    <a href="#en">English</a>
   </nav>
 
-  <div data-lang="cs">
+  <section id="cs">
     <h1>Zásady ochrany soukromí</h1>
     <p><strong>eChůvička</strong> / <strong>eNany</strong> 1.0<br />Účinnost: 19. srpna 2026</p>
 
@@ -48,10 +44,12 @@
     <p>Dotazy k soukromí:<br />
     <strong>Jan Kalina</strong><br />
     E-mail: <a href="mailto:kalinajan93@icloud.com">kalinajan93@icloud.com</a></p>
-    <p><a href="index.html?lang=cs">Zpět na podporu</a></p>
-  </div>
+    <p><a href="index.html#cs">Zpět na podporu</a></p>
+  </section>
 
-  <div data-lang="en">
+  <hr />
+
+  <section id="en" lang="en">
     <h1>Privacy Policy</h1>
     <p><strong>eNany</strong> / <strong>eChůvička</strong> 1.0<br />Effective: 19 August 2026</p>
 
@@ -76,20 +74,7 @@
     <p>Privacy questions:<br />
     <strong>Jan Kalina</strong><br />
     E-mail: <a href="mailto:kalinajan93@icloud.com">kalinajan93@icloud.com</a></p>
-    <p><a href="index.html?lang=en">Back to Support</a></p>
-  </div>
-
-  <script>
-    (function () {
-      var q = new URLSearchParams(location.search).get("lang");
-      var lang = (q === "en" || q === "cs") ? q
-        : ((navigator.language || "cs").toLowerCase().indexOf("en") === 0 ? "en" : "cs");
-      document.documentElement.lang = lang;
-      document.documentElement.setAttribute("data-ui", lang);
-      document.querySelectorAll("[data-switch]").forEach(function (a) {
-        a.classList.toggle("active", a.getAttribute("data-switch") === lang);
-      });
-    })();
-  </script>
+    <p><a href="index.html#en">Back to Support</a></p>
+  </section>
 </body>
 </html>
