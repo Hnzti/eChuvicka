@@ -107,11 +107,11 @@ public class HeartbeatMonitor: ObservableObject {
         #if os(iOS)
         UIDevice.current.isBatteryMonitoringEnabled = true
         let level = UIDevice.current.batteryLevel
-        return level >= 0 ? level : 1.0
+        return level >= 0 ? level : -1
         #elseif os(macOS)
         return macOSBatteryLevel()
         #else
-        return 1.0
+        return -1
         #endif
     }
     
@@ -120,7 +120,7 @@ public class HeartbeatMonitor: ObservableObject {
         guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
               let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [Any],
               !sources.isEmpty else {
-            return 1.0
+            return -1
         }
         
         for source in sources {
@@ -133,7 +133,7 @@ public class HeartbeatMonitor: ObservableObject {
             }
         }
         
-        return 1.0
+        return -1
     }
     #endif
 }

@@ -26,6 +26,12 @@ struct RoleSelectionView: View {
             }
             .padding(.horizontal, 30)
             
+            Text(L10n.Role.twoDevices)
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 28)
+            
             Spacer()
         }
         .toolbar {

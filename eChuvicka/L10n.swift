@@ -31,6 +31,7 @@ enum L10n {
         static var parent: String { t("role.parent") }
         static var childSubtitle: String { t("role.child.subtitle") }
         static var parentSubtitle: String { t("role.parent.subtitle") }
+        static var twoDevices: String { t("role.twoDevices") }
     }
 
     enum Device {
@@ -57,6 +58,7 @@ enum L10n {
         static var parentSpeaking: String { t("child.parentSpeaking") }
         static var waiting: String { t("child.waiting") }
         static var lockHint: String { t("child.lockHint") }
+        static var needSecondDevice: String { t("child.needSecondDevice") }
     }
 
     enum Parent {
@@ -78,7 +80,9 @@ enum L10n {
         static var listening: String { t("parent.listening") }
         static var restoring: String { t("parent.restoring") }
         static func babyBattery(_ percent: Int) -> String { format("parent.babyBattery", percent) }
+        static var babyBatteryUnknown: String { t("parent.babyBatteryUnknown") }
         static var holdToTalk: String { t("parent.holdToTalk") }
+        static var needSecondDevice: String { t("parent.needSecondDevice") }
     }
 
     enum Settings {

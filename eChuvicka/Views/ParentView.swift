@@ -88,20 +88,9 @@ struct ParentView: View {
                                     showPinError = false
                                     return
                                 }
-                                if newPin == device.pairingPIN {
-                                    showPinError = false
-                                    coordinator.connectToDevice(device, authPIN: newPin)
-                                    selectedDevice = nil
-                                    pin = ""
-                                } else {
-                                    showPinError = true
-                                    #if os(iOS)
-                                    UINotificationFeedbackGenerator().notificationOccurred(.error)
-                                    #endif
-                                    DispatchQueue.main.async {
-                                        pin = ""
-                                    }
-                                }
+                                showPinError = false
+                                guard !coordinator.networkManager.isConnectionInProgress else { return }
+                                coordinator.connectToDevice(device, authPIN: newPin)
                             }
                         
                         if showPinError {
@@ -109,6 +98,10 @@ struct ParentView: View {
                                 .foregroundColor(.red)
                                 .font(.system(.subheadline, design: .rounded, weight: .medium))
                                 .transition(.opacity)
+                        }
+                        
+                        if coordinator.networkManager.isConnectionInProgress {
+                            ProgressView()
                         }
                         
                         if let authError = coordinator.lastAuthError {
@@ -157,6 +150,11 @@ struct ParentView: View {
                                 } else {
                                     Text(L10n.Common.searching)
                                         .foregroundColor(.secondary)
+                                    Text(L10n.Parent.needSecondDevice)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal, 24)
                                 }
                             }
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -251,6 +249,7 @@ struct ParentView: View {
                         .background(Color.orange)
                         .transition(.move(edge: .top).combined(with: .opacity))
                     } else if coordinator.appSettings.isLowBatteryAlertEnabled
+                                && coordinator.peerBatteryLevel >= 0
                                 && coordinator.peerBatteryLevel <= Float(coordinator.appSettings.lowBatteryThreshold) {
                         HStack {
                             Image(systemName: "battery.25")
@@ -330,7 +329,9 @@ struct ParentView: View {
                     HStack(spacing: 8) {
                         Image(systemName: batteryIcon(for: coordinator.peerBatteryLevel))
                             .foregroundColor(batteryColor(for: coordinator.peerBatteryLevel))
-                        Text(L10n.Parent.babyBattery(Int(coordinator.peerBatteryLevel * 100)))
+                        Text(coordinator.peerBatteryLevel < 0
+                             ? L10n.Parent.babyBatteryUnknown
+                             : L10n.Parent.babyBattery(Int(coordinator.peerBatteryLevel * 100)))
                             .font(.system(.body, design: .rounded, weight: .medium))
                     }
                     .padding(.vertical, 10)
@@ -387,6 +388,22 @@ struct ParentView: View {
         .animation(.default, value: selectedDevice)
         .onReceive(coordinator.audioManager.$audioLevel) { _ in }
         .onReceive(coordinator.audioManager.$isReceiving) { _ in }
+        .onChange(of: coordinator.lastAuthError) { _, error in
+            if error != nil, selectedDevice != nil {
+                showPinError = true
+                pin = ""
+                #if os(iOS)
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                #endif
+            }
+        }
+        .onChange(of: coordinator.isConnected) { _, connected in
+            if connected {
+                selectedDevice = nil
+                pin = ""
+                showPinError = false
+            }
+        }
         .onChange(of: coordinator.discoveredDevices) { _, devices in
             guard let selected = selectedDevice else { return }
             if let updated = devices.first(where: { $0.id == selected.id }) {
@@ -411,6 +428,7 @@ struct ParentView: View {
     }
     
     private func batteryIcon(for level: Float) -> String {
+        if level < 0 { return "battery.0" }
         if level > 0.8 { return "battery.100" }
         if level > 0.5 { return "battery.75" }
         if level > 0.25 { return "battery.50" }
@@ -418,6 +436,7 @@ struct ParentView: View {
     }
     
     private func batteryColor(for level: Float) -> Color {
+        if level < 0 { return .secondary }
         if level <= 0.2 { return .red }
         if level <= 0.4 { return .yellow }
         return .green

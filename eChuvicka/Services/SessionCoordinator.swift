@@ -222,7 +222,7 @@ public class SessionCoordinator: ObservableObject {
         networkManager.$peerBatteryLevel.sink { [weak self] level in
             Task { @MainActor in
                 guard let self = self, self.role == .parent, self.isConnected else { return }
-                if level <= Float(self.appSettings.lowBatteryThreshold) {
+                if level >= 0, level <= Float(self.appSettings.lowBatteryThreshold) {
                     MonitorAlertPlayer.playLowBatteryAlarmIfNeeded(
                         enabled: self.appSettings.isLowBatteryAlertEnabled
                     )
@@ -359,7 +359,7 @@ public class SessionCoordinator: ObservableObject {
         } else if canSkipPin(for: device) {
             pinToUse = appSettings.lastConnectedPIN
         } else {
-            pinToUse = device.pairingPIN
+            pinToUse = authPIN ?? ""
         }
         
         // Remember intended PIN before auth completes (updated again on success).
@@ -438,16 +438,10 @@ public class SessionCoordinator: ObservableObject {
         }
     }
     
-    /// Prefer stable device id, then last PIN. Never fall back to “the only device on the LAN”.
+    /// Match the last baby unit by stable device id only — PIN is never in Bonjour.
     private func resolveReconnectTarget(in devices: [DiscoveredDevice]) -> DiscoveredDevice? {
         let lastId = appSettings.lastConnectedDeviceId
-        if !lastId.isEmpty, let match = devices.first(where: { $0.id == lastId }) {
-            return match
-        }
-        let lastPIN = appSettings.lastConnectedPIN
-        if !lastPIN.isEmpty, let match = devices.first(where: { $0.pairingPIN == lastPIN }) {
-            return match
-        }
-        return nil
+        guard !lastId.isEmpty else { return nil }
+        return devices.first(where: { $0.id == lastId })
     }
 }

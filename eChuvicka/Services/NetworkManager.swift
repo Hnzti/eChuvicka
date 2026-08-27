@@ -104,7 +104,7 @@ public class NetworkManager: ObservableObject {
     /// True only after successful auth handshake.
     @Published public var isConnected: Bool = false
     @Published public var generatedPIN: String = ""
-    @Published public var peerBatteryLevel: Float = 1.0
+    @Published public var peerBatteryLevel: Float = -1
     @Published public var discoveredDevices: [DiscoveredDevice] = []
     @Published public var connectedDeviceName: String?
     @Published public var connectedDeviceId: String?
@@ -266,9 +266,8 @@ public class NetworkManager: ObservableObject {
         guard listener != nil, !hostedPairingPart.isEmpty else { return }
         
         hostedRequiresPin = isPinRequired
-        let pin = hostedPIN.isEmpty ? (hostedPairingPart.components(separatedBy: "-").last ?? generatedPIN) : hostedPIN
-        let newPrefix = isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-"
-        let newPairingPart = newPrefix + pin
+        let pin = hostedPIN.isEmpty ? generatedPIN : hostedPIN
+        let newPairingPart = isPinRequired ? "eChuvicka-LOCKED" : "eChuvicka-OPEN"
         guard newPairingPart != hostedPairingPart else { return }
         
         hostedPairingPart = newPairingPart
@@ -312,7 +311,7 @@ public class NetworkManager: ObservableObject {
         
         do {
             let nwListener = try NWListener(using: params)
-            hostedPairingPart = (isPinRequired ? "eChuvicka-PIN-" : "eChuvicka-OPEN-") + pairingPIN
+            hostedPairingPart = isPinRequired ? "eChuvicka-LOCKED" : "eChuvicka-OPEN"
             nwListener.service = makeAdvertisedService()
             #if DEBUG
             print("[Child] Advertising as \(advertisedInstanceName()) id=\(deviceId)")
@@ -446,8 +445,8 @@ public class NetworkManager: ObservableObject {
                 for result in results {
                     guard case let .service(name, _, _, _) = result.endpoint else { continue }
                     
-                    let requiresPin = name.contains("-PIN-")
-                    let pairingPIN = DeviceName.pairingPIN(fromServiceInstanceName: name)
+                    let requiresPin = name.contains("LOCKED") || name.contains("-PIN-")
+                    let pairingPIN = ""
                     
                     var txtName: String?
                     var txtDeviceId: String?
@@ -460,7 +459,7 @@ public class NetworkManager: ObservableObject {
                     if let txtDeviceId, !txtDeviceId.isEmpty {
                         stableId = txtDeviceId
                     } else {
-                        stableId = "pin:\(pairingPIN)"
+                        stableId = name
                     }
                     let displayName = DeviceName.displayName(
                         fromServiceInstanceName: name,

@@ -23,7 +23,7 @@ struct eChuvickaApp: App {
                 .environmentObject(coordinator)
                 .environmentObject(coordinator.appSettings)
                 #if os(macOS)
-                .frame(minWidth: 400, minHeight: 600)
+                .frame(minWidth: 420, minHeight: 640)
                 #endif
                 #if os(iOS)
                 .onAppear {

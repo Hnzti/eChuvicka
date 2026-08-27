@@ -45,6 +45,7 @@
 		A10000000000000000000D /* ConnectionStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStatusBadge.swift; sourceTree = "<group>"; };
 		A10000000000000000000E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A100000000000000000017 /* Info-macOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-macOS.plist"; sourceTree = "<group>"; };
 		A100000000000000000010 /* eChuvicka.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = eChuvicka.entitlements; sourceTree = "<group>"; };
 		A100000000000000000011 /* DeviceName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceName.swift; sourceTree = "<group>"; };
 		A100000000000000000012 /* MonitorAlertPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorAlertPlayer.swift; sourceTree = "<group>"; };
@@ -84,6 +85,7 @@
 				C100000000000000000005 /* Views */,
 				A10000000000000000000E /* Assets.xcassets */,
 				A10000000000000000000F /* Info.plist */,
+				A100000000000000000017 /* Info-macOS.plist */,
 				A100000000000000000010 /* eChuvicka.entitlements */,
 				A100000000000000000013 /* PrivacyInfo.xcprivacy */,
 				A100000000000000000014 /* InfoPlist.xcstrings */,
@@ -368,13 +370,14 @@
 				CODE_SIGN_ENTITLEMENTS = eChuvicka/eChuvicka.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = H7M39C5AJ3;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = eChuvicka/Info.plist;
+				"INFOPLIST_FILE[sdk=macosx*]" = "eChuvicka/Info-macOS.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "eChůvička";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
@@ -404,13 +407,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = eChuvicka/eChuvicka.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = H7M39C5AJ3;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = eChuvicka/Info.plist;
+				"INFOPLIST_FILE[sdk=macosx*]" = "eChuvicka/Info-macOS.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "eChůvička";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";

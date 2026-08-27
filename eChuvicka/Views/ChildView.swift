@@ -15,7 +15,6 @@ struct ChildView: View {
                 HStack {
                     Button(action: {
                         coordinator.stop()
-                        coordinator.role = .none
                     }) {
                         HStack(spacing: 4) {
                             Image(systemName: "chevron.left")
@@ -131,6 +130,11 @@ struct ChildView: View {
                                 Text(L10n.Child.waiting)
                                     .font(.system(.body, design: .rounded))
                                     .foregroundColor(.secondary)
+                                Text(L10n.Child.needSecondDevice)
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 12)
                             }
                         }
                         

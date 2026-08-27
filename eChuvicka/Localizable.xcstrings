@@ -154,6 +154,22 @@
         }
       }
     },
+    "child.needSecondDevice" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na druhém zařízení zvol Rodič a zadej tento PIN."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the second device choose Parent and enter this PIN."
+          }
+        }
+      }
+    },
     "child.waiting" : {
       "localizations" : {
         "cs" : {
@@ -605,6 +621,38 @@
         }
       }
     },
+    "parent.babyBatteryUnknown" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baterie dítěte: —"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baby battery: —"
+          }
+        }
+      }
+    },
+    "parent.needSecondDevice" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na druhém zařízení Apple na stejné Wi‑Fi zvol Dítě. Pak se tu objeví."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On a second Apple device on the same Wi‑Fi, choose Baby. It will show up here."
+          }
+        }
+      }
+    },
     "parent.babyBattery" : {
       "localizations" : {
         "cs" : {
@@ -969,6 +1017,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sound receiver"
+          }
+        }
+      }
+    },
+    "role.twoDevices" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potřebuješ dvě zařízení Apple na stejné Wi‑Fi — jedno u dítěte, druhé u sebe."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You need two Apple devices on the same Wi‑Fi — one with the baby, one with you."
           }
         }
       }
